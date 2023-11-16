@@ -1,3 +1,8 @@
 V1.0.2
+# Added missing changelog changes to V1.0.1.
+
+V1.0.1
+# Restored ability to minimize app, or hide by x'ing out.
+# Add Tray Menu and Icon.
 # Fixed incorrect running scripts in header.
 # Added doubleclicking to the lsit view to start/stop scripts.
