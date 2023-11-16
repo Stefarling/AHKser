@@ -1,17 +1,11 @@
 #Requires AutoHotkey v2.0
 ; AHKser Script Manager
-; Version 0.0.1a
+; Version 1.0.0
 ; Use to manage AHK scripts from central GUI
 
 
 ; Hotkeys
 ; None yet
-
-; Settings
-Persistent
-SetWorkingDir A_ScriptDir
-
-
 
 ; Variables
 ProgramName             := "AHKser Script Manager"
@@ -23,6 +17,39 @@ FocusedScript           := ""
 Running                 := "✓"
 Stopped                 := "X"
 Unknown                 := "?"
+
+AlwaysShowUniversal     := true
+CategoriesArray         := []
+
+
+; Settings
+Persistent
+SetWorkingDir A_ScriptDir
+
+
+; Settings - Tray
+TraySetIcon A_ScriptDir "\assets\AHKser-icon.ico"
+A_AllowMainWindow   := false
+A_IconTip           := ProgramName
+TrayMenu            := A_TrayMenu
+TrayMenu.Delete()
+TrayMenu.Add("Open", OpenGui)
+TrayMenu.Add("Help", OpenHelp)
+TrayMenu.Add()
+TrayMenu.Add("Start Favourites", NoAction)
+TrayMenu.Disable("Start Favourites")
+TrayMenu.Add("Stop all scripts", NoAction)
+TrayMenu.Disable("Stop all scripts")
+TrayMenu.Add()
+TrayMenu.Add("Exit AHKser", QuitProgram)
+TrayMenu.Default :="Open"
+
+
+; Settings - BarMenu
+
+
+
+
 
 
 ; Gui
@@ -54,6 +81,22 @@ ListView.OnEvent("DoubleClick", ToggleScriptStatus)
 
 
 ; Functions
+NoAction(*){
+    ; For when we don't want to do anything today
+}
+
+QuitProgram(*){
+    ExitApp 0
+}
+
+OpenGui(*){
+    MainGui.Show()
+}
+
+OpenHelp(*){
+    Run "https://github.com/Stefarling/AHKser/wiki"
+}
+
 ToggleScriptStatus(GuiCtrlObj, Info){
     global FocusedScript := ListView.GetText(Info, 3)
 
