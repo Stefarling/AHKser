@@ -1,6 +1,6 @@
 #Requires AutoHotkey v2.0
 ; AHKser Script Manager
-; Version 1.0.0
+; Version 1.0.1
 ; Use to manage AHK scripts from central GUI
 
 
