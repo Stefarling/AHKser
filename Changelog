@@ -1,4 +1,8 @@
 V1.0.2
+# Added 1280x720 support.
+# Reworked script to handle errors better.
+# Added setup GUI to most scripts.
+# Removed MultiPurchase.ahk. Use StoreScripts.ahk instead.
 # Added missing changelog changes to V1.0.1.
 
 V1.0.1

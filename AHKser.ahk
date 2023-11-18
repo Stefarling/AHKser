@@ -9,7 +9,7 @@
 
 ; Variables
 ProgramName             := "AHKser Script Manager"
-Resolutions             := ["1920x1080", "2560x1440"]
+Resolutions             := ["1280x720", "1920x1080", "2560x1440"]
 Scripts                 := []
 Resolution              := ""
 FocusedScript           := ""
