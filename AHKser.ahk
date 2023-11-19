@@ -1,30 +1,51 @@
 #Requires AutoHotkey v2.0
-; AHKser Script Manager
-; Version 1.0.2
-; Use to manage AHK scripts from central GUI
+#SingleInstance Force
+#Warn
+; TITLE AHKser Script Manager
+; VERSION 1.0.2
+; AUTHOR Stefarling
+; DESCRIPTION Use to manage AHK scripts from central GUI.
+; CATEGORY Utility
+
+/*
+HELPBEGIN
+This is the AHKser Script Manager.
+HELPEND
+*/
 
 
 ; Hotkeys
 ; None yet
 
-; Variables
+
+; Program Variables
 ProgramName             := "AHKser Script Manager"
-Resolutions             := ["1280x720", "1920x1080", "2560x1440"]
-Scripts                 := []
-Resolution              := ""
+ConfigFile              := "AHKserSettings.ini"
+
+
+; Global Variables
 FocusedScript           := ""
 
+
+; Global Symbols
 Running                 := "✓"
 Stopped                 := "X"
 Unknown                 := "?"
 
-AlwaysShowUniversal     := true
-CategoriesArray         := []
 
 
-; Settings
+; Program
 Persistent
 SetWorkingDir A_ScriptDir
+FileAppend("", ConfigFile)
+
+SupportedResolutions    := ["1280x720", "1920x1080", "2560x1440"]
+Resolution              := IniRead(ConfigFile, "TargetAppSettings", "TargetAppResolution", "")
+AlwaysShowUniversal     := IniRead(ConfigFile, "AHKserSettings", "AlwaysShowUniversal", true)
+AlwaysShowFavorites     := IniRead(ConfigFile, "AHKserSettings", "AlwaysShowFavorites", true)
+AlwaysShowExperimental  := IniRead(ConfigFile, "AHKserSettings", "AlwaysShowExperimental", false)
+CategoriesArray         := []
+
 
 
 ; Settings - Tray
@@ -46,41 +67,72 @@ TrayMenu.Default :="Open"
 
 
 ; Settings - BarMenu
+FileMenu    := Menu()
+FileMenu.Add "E&xit", (*) => ExitApp()
+Menus   := MenuBar()
+Menus.Add "&File", FileMenu
+Menus.Add "&Settings", (*) => OpenSettings()
 
 
 
-
-
-
-; Gui
-MainGui                 := Gui()
+; MainGui
+MainGui                 := Gui("-Parent -Resize +OwnDialogs")
 MainGui.Title           := ProgramName
-
-; Gui Controls
-ResolutionGuiLabel      := MainGui.Add("Text", "Section","Resolution")
-ResolutionComboBox      := MainGui.Add("ComboBox", "", Resolutions)
-
-StartButton             := MainGui.Add("Button", "Section Y+5 r2 w60", "Start`nScript")
-ScriptsFolderButton     := MainGui.Add("Button","r2 w60","Scripts`nFolder")
-StopButton              := MainGui.Add("Button", "YP r2 w60", "Stop`nScript")
-
+MainGui.MenuBar         := Menus
 
 
 ; Gui ListView
-ListView                := MainGui.Add("ListView", "Section XM+150 YM+0 h150 w300 -multi",["", "Script Name", "Path"])
+ListView                := MainGui.Add("ListView", "Section -multi  r10 W450",["", "Script Name", "Path"])
+
+StatusBar               := MainGui.Add("StatusBar",,)
 
 
 
-; Gui OnEvents
-ResolutionComboBox.OnEvent("Change", UpdateResolution )
-StartButton.OnEvent("Click", StartScript)
-StopButton.OnEvent("Click", StopScript)
-ScriptsFolderButton.OnEvent("Click", OpenScriptsFolder)
+; MainGui OnEvents
 ListView.OnEvent("ItemFocus", ScriptFocused)
 ListView.OnEvent("DoubleClick", ToggleScriptStatus)
 
 
+; SettingsGui
+SettingsGui := Gui("-Resize +ToolWindow +Owner" MainGui.Hwnd)
+SettingsGui.Add("CheckBox", "vUniversalShow","Always show universal scripts.")
+SettingsGui.Add("CheckBox", "vFavoriteShow","Always show favorite scripts.")
+SettingsGui.Add("CheckBox", "vExperimentalShow","Show experimental scripts.")
+
+SettingsGui.Add("Text", "XP YP+20","Resolution")
+ResolutionComboBox      := SettingsGui.Add("ComboBox", "XP+0 YP+15", SupportedResolutions)
+ResolutionComboBox.Text := Resolution
+
+ScriptsFolderButton     := SettingsGui.Add("Button","Section r2 w60","Scripts`nFolder")
+AppFolderButton         := SettingsGui.Add("Button","YS XP+65 r2 w60","App`nFolder")
+
+
+
+SettingsGui.Add("Text","Section XS YS+60","Press Escape to close this window.")
+
+; SettingsGui OnEvents
+SettingsGui.OnEvent("Close", CloseSettings)
+SettingsGui.OnEvent("Escape", CloseSettings)
+ScriptsFolderButton.OnEvent("Click", OpenScriptsFolder)
+AppFolderButton.OnEvent("Click", OpenAppFolder)
+
 ; Functions
+OpenSettings(){
+    MainGui.Opt("+Disabled")
+
+    ; OnEvents    
+    ResolutionComboBox.OnEvent("Change", UpdateResolution )
+
+
+    SettingsGui.Show
+}
+
+CloseSettings(thisgui){
+    MainGui.Opt("-Disabled")
+    SettingsGui.Hide
+    return true
+}
+
 NoAction(*){
     ; For when we don't want to do anything today
 }
@@ -111,7 +163,8 @@ ToggleScriptStatus(GuiCtrlObj, Info){
 
 UpdateResolution(obj, info){
     if ( obj.Value > 0){
-        global Resolution := Resolutions[obj.Value]
+        global Resolution := SupportedResolutions[obj.Value]
+        IniWrite Resolution, ConfigFile, "TargetAppSettings", "TargetAppResolution"
     }
 
     ListScripts()
@@ -129,6 +182,13 @@ OpenScriptsFolder(*){
         DirCreate("Scripts\Universal")
         Run "explore " A_WorkingDir "\Scripts"        
     }
+}
+
+OpenAppFolder(*){    
+    try {
+    Run "explore " A_WorkingDir       
+    }
+
 }
 
 StartScript(*){

@@ -1,4 +1,6 @@
 V1.0.2
+# Added settings.
+# Added menubar.
 # Added 1280x720 support.
 # Reworked script to handle errors better.
 # Added setup GUI to most scripts.
