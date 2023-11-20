@@ -54,11 +54,11 @@ class Script {
 Persistent
 SetWorkingDir A_ScriptDir
 
-TargetResolution        := IniRead(ConfigFile, "TargetAppSettings", "TargetAppResolution", "Any")
+TargetResolution        := IniRead(ConfigFile, "TargetAppSettings", "TargetAppResolution", "Universal")
 ShowUniversal           := IniRead(ConfigFile, "AHKserSettings", "ShowUniversal", true)
 ShowFavorites           := IniRead(ConfigFile, "AHKserSettings", "ShowFavorites", true)
 ShowExperimental        := IniRead(ConfigFile, "AHKserSettings", "ShowExperimental", false)
-dirScripts           := IniRead(ConfigFile, "AHKserSettings", "ScriptsFolder", A_ScriptDir "\Scripts")
+dirScripts              := IniRead(ConfigFile, "AHKserSettings", "ScriptsFolder", A_ScriptDir "\Scripts")
 ResolutionsArray        := []
 AppArray                := []
 CategoriesArray         := []
@@ -111,7 +111,7 @@ MainGui.Add("Text","Section YS", "Sub-Category:")
 SubCategorySelector := MainGui.Add("ComboBox","XP",SubCategoriesArray)
 RefreshScriptsButton    := MainGui.Add("Button"," YP r1", "Refresh")
 
-ListView := MainGui.Add("ListView", "Section XM -multi  r10 W450",[" ", "Script Name", "App", "Category", "Sub-Category"])
+ListView := MainGui.Add("ListView", "Section XM -multi  r10 W450",[" ", "Script Name", "App", "Branch", "Resolution", "Category", "Sub-Category"])
 
 StatusBar               := MainGui.Add("StatusBar",,)
 
@@ -217,7 +217,7 @@ CloseSettings(thisgui){
 }
 
 NoAction(*){
-    ; For when we don't want to do anything today
+    ; For when we don't want to do Universalthing today
 }
 
 OpenGui(*){
@@ -429,9 +429,9 @@ ListScripts(){
             if((AppFilter = v.targetApp or AppFilter = " ") 
                 and (CategoryFilter = v.mainCategory or CategoryFilter = " ") 
                 and (SubCategoryFilter = v.subCategory  or SubCategoryFilter = " ")
-                and (TargetResolution = v.targetResolution or v.targetResolution = "Any" or TargetResolution = "Any")
+                and (TargetResolution = v.targetResolution or v.targetResolution = "Universal" or TargetResolution = "Universal")
             ){
-                    ListView.Add(,v.status, v.title, v.targetApp, v.mainCategory, v.subCategory)    
+                    ListView.Add(,v.status, v.title, v.targetApp, v.release, v.targetResolution, v.mainCategory, v.subCategory)    
             }
     }
 
