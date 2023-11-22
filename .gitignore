@@ -1,1 +1,5 @@
-Scripts
+*.zip
+*.ini
+*.log
+Scripts/*
+!Universal
