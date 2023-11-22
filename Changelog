@@ -1,16 +1,17 @@
-V1.0.2
-# Added filtering.
-# Added settings.
-# Added menubar.
-# Added statusbar.
-# Added 1280x720 support.
-# Reworked script to handle errors better.
-# Added setup GUI to most scripts.
-# Removed MultiPurchase.ahk. Use StoreScripts.ahk instead.
-# Added missing changelog changes to V1.0.1.
+# V1.0.2
+Added filtering.
+Added persistent settings.
+Added debug flag. Default is off.
+Added menubar.
+Added statusbar.
+Added 1280x720 support.
+Reworked script to handle errors better.
+Added missing changelog changes to V1.0.1.
+Favorites not implemented yet.
+Added StopWatch.ahk
 
-V1.0.1
-# Restored ability to minimize app, or hide by x'ing out.
-# Add Tray Menu and Icon.
-# Fixed incorrect running scripts in header.
-# Added doubleclicking to the lsit view to start/stop scripts.
+# V1.0.1
+Restored ability to minimize app, or hide by x'ing out.
+Add Tray Menu and Icon.
+Fixed incorrect running scripts in header.
+Added doubleclicking to the lsit view to start/stop scripts.
