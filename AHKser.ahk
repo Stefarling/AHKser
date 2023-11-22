@@ -120,7 +120,7 @@ MainGui.Add("Text","Section YS", "Sub-Category:")
 SubCategorySelector := MainGui.Add("ComboBox","XP",SubCategoriesArray)
 RefreshScriptsButton    := MainGui.Add("Button"," YP r1", "Refresh")
 
-ListView := MainGui.Add("ListView", "Section XM -multi  r10 W450",[" ", "Script Name", "App", "Branch", "Resolution", "Category", "Sub-Category"])
+ListView := MainGui.Add("ListView", "Section XM -multi  r10 W450",[" ", "Script Name", "App", "Branch", "Resolution", "Category", "Sub-Category", "Path"])
 
 StatusBar               := MainGui.Add("StatusBar",,)
 
@@ -326,69 +326,47 @@ OpenHelp(*){
 }
 
 ToggleScriptStatus(obj, index){
-    debugString := FormatTime(,ShortTime) " |- Toggling script status: `n" 
-    try{
-        row := ScriptsArray[index]
-        
-        if(row.status = StatusStopped){
-            debugString .= "Attempting to run " row.path ".`n"            
-            if(Debug){
-                FileAppend(debugString, DebugLog)
-            }
-            StartScript(row)
-        }else{
-            debugString .= "Attempting to stop " row.path ".`n"
-            
-            if(Debug){
-                FileAppend(debugString, DebugLog)
-            }
-            StopScript(row)        
-        }
-        
-    }
-}
 
-StartScript(row){
-    debugString := FormatTime(,ShortTime) " |- ..." 
-    
-    if(row.path = ""){
-        debugString .= "Failed, no script specified.`n" 
-        ; Do nothing
-    }else{
-        Run row.path
-        row.status := StatusRunning
-        debugString .= "Success!`n"
-    }
-        
-    if(Debug){
-        FileAppend(debugString, DebugLog)
-    }
+    if (index > 0) {
+        ; Get the path of the selected item
+        selectedPath := ListView.GetText(index, 8)
 
-}
+        ; Find the corresponding script in ScriptsArray based on the path
+                ; Find the corresponding script in ScriptsArray based on the path
+                loopScriptIndice := ""
+                for i, localscript in ScriptsArray {
+                    if (localscript.path = selectedPath) {
+                        loopScriptIndice := A_Index
+                        break
+                    }
+                }
 
-StopScript(row){
-    debugString := FormatTime(,ShortTime) " |- ..." 
-    DetectHiddenWindows "On"
-    DetectHiddenText "On"
-
-        if(row.path = ""){
-            debugString .= "Failed, no script specified.`n" 
-            ; DO NOTHING
-        }else{
-            WinClose(RegExReplace(row.path,"^.*\\"))
-            row.status := StatusStopped
-            debugString .= "Success!`n"
-        }
-           
+        if (loopScriptIndice > 0) {
+            if (ScriptsArray[loopScriptIndice].status = StatusStopped) {
                 
-    if(Debug){
-        FileAppend(debugString, DebugLog)
-    }
+                ; Run it
+                Run ScriptsArray[loopScriptIndice].path
 
-    DetectHiddenText "Off"
-    DetectHiddenWindows "Off"
-    
+                ; Update the script status and refresh the GUI
+                ScriptsArray[loopScriptIndice].status := StatusRunning
+                ListScripts()
+            } else {
+                
+                DetectHiddenWindows "On"
+                DetectHiddenText "On"
+                ; Stop it                
+                WinClose(RegExReplace(ScriptsArray[loopScriptIndice].path,"^.*\\"))
+
+                DetectHiddenText "Off"
+                DetectHiddenWindows "Off"
+                ; Update the script status and refresh the GUI
+                ScriptsArray[loopScriptIndice].status := StatusStopped
+                ListScripts()
+            }
+        }
+    }        
 }
+
 
 
 AdjustColumns(){
@@ -648,7 +626,8 @@ ListScripts(){
                                 loopScript.release, 
                                 loopScript.targetResolution, 
                                 loopScript.mainCategory, 
-                                loopScript.subCategory
+                                loopScript.subCategory,
+                                loopScript.path
                             )    
 
 
@@ -664,7 +643,8 @@ ListScripts(){
                                     loopScript.release, 
                                     loopScript.targetResolution, 
                                     loopScript.mainCategory, 
-                                    loopScript.subCategory
+                                    loopScript.subCategory,
+                                    loopScript.path
                                 )   
                             }else{                                
                                 loopString .= FormatTime(,ShortTime) " |- Filtered " loopScript.release ".`n"
@@ -701,38 +681,17 @@ ListScripts(){
 UpdateScriptsStatus(){
     DetectHiddenWindows "On"
     scriptsRunning := 0
-    ListView.Modify(0,, StatusStopped)
 
-    scriptsList := WinGetList("ahk_class AutoHotkey")
-    for k, v in  scriptsList{
-        title := WinGetTitle(scriptsList[k])
-        title := RegExReplace(title, " - AutoHotkey v[\.0-9]+$")
-        
         for k, v in ScriptsArray{
-            if(title = v.path){
-                
-                v.status := StatusRunning
+            if(v.status = StatusRunning){
                 scriptsRunning++
             }
         }        
-        
-    }
-    
+            
     ListView.ModifyCol(1,, scriptsRunning)
-    if(scriptsRunning>0){
-        UpdateGuiStatus
-    }
+
+    ListScripts
     DetectHiddenWindows "Off"
-}
-
-UpdateGuiStatus(){
-
-    Loop ListView.GetCount(){
-        ListView.Modify(A_Index,,ScriptsArray[A_Index].status)
-    }
-
-    ListView.ModifyCol()
-
 }
 
 UpdateStatus(){
@@ -791,5 +750,6 @@ Gui_Size(thisGui, MinMax, Width, Height)  ; Expand/Shrink ListView in response t
 
 ; Run the script
 InitializeScript
+UpdateStatus
 OpenGui
 SetTimer(UpdateStatus, 500)
