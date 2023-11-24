@@ -3,14 +3,16 @@
 #Warn
 #ErrorStdOut
 
-CodeVersion := "1.0.3", CodeAuthor := "Stefan Darling", CodeRepo := "https://github.com/Stefarling/AHKser"
-
+; Shenanigans in the RegEx required 4 version numbers.
+CodeVersion := "1.0.3.0", company := "My Company"
 ;@Ahk2Exe-Let U_version = %A_PriorLine~U)^(.+"){1}(.+)".*$~$2%
-;@Ahk2Exe-Let U_author = %A_PriorLine~U)^(.+"){3}(.+)".*$~$2%
-;@Ahk2Exe-Let U_repo = %A_PriorLine~U)^(.+"){5}(.+)".*$~$2%
+;@Ahk2Exe-Let U_company = %A_PriorLine~U)^(.+"){3}(.+)".*$~$2%
 ;@Ahk2Exe-SetMainIcon assets\appIcon.ico
-;@Ahk2Exe-Base ..\v2\AutoHotkey64.exe, compiled\AHKser
-;@Ahk2Exe-ExeName %A_ScriptName%
+;@Ahk2Exe-SetName AHKser
+;@Ahk2Exe-SetVersion %U_version%
+;@Ahk2Exe-SetFileVersion %U_version%
+;@Ahk2Exe-Base ..\v2\AutoHotkey64.exe, compiled\
+;@Ahk2Exe-ExeName %A_ScriptName%-V%U_version%
 
 ;@Ahk2Exe-IgnoreBegin
 TraySetIcon(A_ScriptDir "\assets\appIcon.ico")
