@@ -43,9 +43,7 @@ TotalTime := 0
 Locked := false
 
 ; Don't edit below this line
-
-; Settings
-Persistent
+OnExit StopStopwatch
 
 ; Gui
 MainGui             := Gui(, ProgramName)
@@ -70,6 +68,8 @@ StartButton.OnEvent("Click", (*) => ActivateStart())
 LapButton.OnEvent("Click", (*) => ActivateLap())
 ExportButton.OnEvent("Click", (*) => ActivateExport())
 LockButton.OnEvent("Click", (*) => ToggleOSD())
+MainGui.OnEvent("Close", StopStopwatch)
+
 
 ToggleOSD(){
     programStyle := "+0x80"
@@ -201,12 +201,15 @@ MainGui.Show("NoActivate")
 
 
 UpdateGui() {
-    if (Running){
+    if (Running = true){
         global CurrentLapTime := A_TickCount - StartTime
-
 
         LapTimeButton.Text      := TimeToString(CurrentLapTime)
         TotalTimeButton.Text    := TimeToString(CurrentTotalTime + CurrentLapTime)
         
     }
+}
+
+StopStopwatch(*){
+        ExitApp(0)
 }
