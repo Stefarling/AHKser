@@ -3,3 +3,7 @@
 *.log
 Scripts/*
 !Universal
+*.exe
+/compiled
+/compiler
+/AutoHotkey
