@@ -1,3 +1,11 @@
+# V1.0.3
+Rewritten GUI to optimize redraws.
+Filtering and persistence should now work.
+AHKser will now only manage scripts it knows from the Scripts folder.
+Still have to restart program if new scripts are added.
+Work has started on favorites and context menu.
+Wiki is still WIP
+
 # V1.0.2
 Added filtering.
 Added persistent settings.
