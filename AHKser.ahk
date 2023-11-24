@@ -174,31 +174,34 @@ OpenAppFolder(*){
 
 FilterApps(ctrl, *){    
     if(ctrl.Value > 0){
-        global TargetTargetAppFilter := AppsArray[ctrl.Value]
+        global TargetAppFilter := AppsArray[ctrl.Value]
     }else{
-        global TargetTargetAppFilter := ""
+        global TargetAppFilter := ""
     } 
 
+    global MGuiIsDirty := true
     UpdateGui
 }
 
 FilterCategory(ctrl, *){    
     if(ctrl.Value > 0){
-        global TargetCategoryFilter := AppsArray[ctrl.Value]
+        global TargetCategoryFilter := CategoriesArray[ctrl.Value]
     }else{
         global TargetCategoryFilter := ""
     } 
 
+    global MGuiIsDirty := true
     UpdateGui
 }
 
 FilterSubCategory(ctrl, *){    
     if(ctrl.Value > 0){
-        global TargetSubCategoryFilter := AppsArray[ctrl.Value]
+        global TargetSubCategoryFilter := SubCategoriesArray[ctrl.Value]
     }else{
         global TargetSubCategoryFilter := ""
     } 
 
+    global MGuiIsDirty := true
     UpdateGui
 }
 
@@ -210,7 +213,9 @@ FilterResolution(obj, info, resolution := TargetAppResolution){
                 global TargetAppResolution := ""
             }
         }
-    UpdateGui
+
+        global MGuiIsDirty := true
+        UpdateGui
 }
 
 GuiResize(thisGui, MinMax, Width, Height)  ; Expand/Shrink ListView in response to the user's resizing.
@@ -296,11 +301,15 @@ CloseSettings(thisgui){
 
 UpdateShowExperimental(ctrl, *){
     global ShowExperimental := ctrl.Value
+
+    global MGuiIsDirty := true
     UpdateGui
 }
 
 UpdateShowFavorites(ctrl, *){
     global ShowFavorites := ctrl.Value
+
+    global MGuiIsDirty := true
     UpdateGui
 }
 
@@ -499,7 +508,7 @@ ListScripts(){
         loopScript := ScriptsArray[A_Index]
 
         if(TargetAppFilter = loopScript.targetApp or TargetAppFilter = ""){
-            
+
             if(TargetCategoryFilter = loopScript.mainCategory 
                 or TargetCategoryFilter = ""){
                 
