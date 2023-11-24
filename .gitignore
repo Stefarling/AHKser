@@ -6,4 +6,4 @@ Scripts/*
 *.exe
 /compiled
 /compiler
-/AutoHotkey
+/Scripts
