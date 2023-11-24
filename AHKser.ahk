@@ -13,7 +13,6 @@ CodeVersion := "1.0.3.0", company := "My Company"
 ;@Ahk2Exe-SetFileVersion %U_version%
 ;@Ahk2Exe-Base ..\v2\AutoHotkey64.exe, compiled\
 ;@Ahk2Exe-ExeName %A_ScriptName~(\.ahk){1}%-V%U_version%
-;@Ahk2Exe-PostExec
 
 ;@Ahk2Exe-IgnoreBegin
 TraySetIcon(A_ScriptDir "\assets\appIcon.ico")
