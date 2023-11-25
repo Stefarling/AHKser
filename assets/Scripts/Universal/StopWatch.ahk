@@ -57,9 +57,8 @@ LockButton          := MainGui.Add("Button","YP w60 r2", "Lock`nF5")
 LapTimeButton       := MainGui.Add("Button","vLapTime Section XS Y+m r1","00:00:00.000")
 TotalTimeButton     := MainGui.Add("Button","vTotalTime Section","00:00:00.000")
 
-LapView             := MainGui.Add("ListView", "-Multi Section w290 Count 200 NoSortHdr -LV0x10 -ReadOnly -WantF2", ["#", "Lap Time", "Total Time"])
-LapView.ModifyCol
-LapView.ModifyCol(1, "Integer Center AutoHdr 40")
+LapView             := MainGui.Add("ListView", "-Multi Section w350 Count 200 NoSortHdr -LV0x10 -ReadOnly -WantF2", ["#", "Lap Time", "Total Time"])
+LapView.ModifyCol(1, "Integer Center +AutoHdr 40")
 LapView.ModifyCol(2, "Integer Center 130 ")
 LapView.ModifyCol(3, "Integer Center 130 ")
 
@@ -103,9 +102,9 @@ ToggleOSD(){
         LapButton.Visible := false
         LockButton.Visible := false
         LapView.Opt("BackgroundSilver")
-        LapView.SetFont("s12 Bold")
-        LapTimeButton.SetFont("s11 Bold")
-        TotalTimeButton.SetFont("s11 Bold")
+        LapView.SetFont("s10 Bold")
+        LapTimeButton.SetFont("s10 Bold")
+        TotalTimeButton.SetFont("s10 Bold")
 
         LapView.Opt("-Hdr -LV0x1000 -E0x200 -E0x20")
 
@@ -161,6 +160,7 @@ ActivateExport(){
     CurrentTime := "Time.csv"
     FileName := A_ScriptDir "\" CurrentTime
     FileAppend OutputString, FileName
+	Run "explore ", A_ScriptDir
 
 }
 
