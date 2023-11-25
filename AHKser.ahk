@@ -4,7 +4,7 @@
 #ErrorStdOut
 
 ; Shenanigans in the RegEx required 4 version numbers.
-CodeVersion := "1.0.3.0", company := "My Company"
+CodeVersion := "1.0.3.1"
 ;@Ahk2Exe-Let U_version = %A_PriorLine~U)^(.+"){1}(.+)".*$~$2%
 ;@Ahk2Exe-Let U_company = %A_PriorLine~U)^(.+"){3}(.+)".*$~$2%
 ;@Ahk2Exe-SetMainIcon assets\appIcon.ico
@@ -25,9 +25,6 @@ TraySetIcon(A_ScriptDir "\assets\appIcon.ico")
 Persistent
 SetWorkingDir A_ScriptDir
 OnExit SaveProgramState
-
-F11::ListVars
-
 
 ; #ANCHOR Variables - Program
 ProgramTitle            := "AHKser Script Manager"
