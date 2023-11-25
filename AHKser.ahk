@@ -26,6 +26,8 @@ Persistent
 SetWorkingDir A_ScriptDir
 OnExit SaveProgramState
 
+F11::ListVars
+
 
 ; #ANCHOR Variables - Program
 ProgramTitle            := "AHKser Script Manager"
@@ -63,16 +65,12 @@ TMenu.Add("Open", OpenGui)
 TMenu.Add("Open", OpenSettings)
 TMenu.Add("Help", OpenHelp)
 TMenu.Add()
-TMenu.Add("Stop all scripts", StopAllScripts)
-TMenu.Disable("Stop all scripts")
 TMenu.Add()
 TMenu.Add("Exit AHKser", StopAHKser)
 TMenu.Default :="Open"
 
 ; #ANCHOR Settings - BarMenu
 FMenu           := Menu()
-FMenuScriptBtn  := FMenu.Add("&Start", StartScript)
-FMenu.Disable("&Start")
 FMenu.Add()
 FMenu.Add("E&xit", StopAHKser)
 BMenu           := MenuBar()
@@ -100,7 +98,6 @@ StsBar               := MGui.Add("StatusBar",,)
 
 
 ; #ANCHOR - GUI - Main - OnEvent
-LV.OnEvent("ItemFocus", SetFocus)
 LV.OnEvent("DoubleClick", ToggleScriptStatus)
 MGui.OnEvent("Size", GuiResize)
 MGuiAppFltrBtn.OnEvent("Change", FilterApps)
@@ -229,45 +226,35 @@ GuiResize(thisGui, MinMax, Width, Height)  ; Expand/Shrink ListView in response 
 }
 
 ToggleScriptStatus(ctrl, index){
+    ; #FIXME
 
-    if (index > 0) {
+    if(index > 0){
 
-            if (ScriptsArray[index].status != Running) {
-                
-                ; Run it
-                Run(ScriptsArray[index].path)
+        scriptStatus    := LV.GetText(index,1)
+        scriptPath      := LV.GetText(index,8)
 
-                ; Update the script status and refresh the GUI
-                ScriptsArray[index].status := Running
+        runningScripts := WinGetList("ahk_class AutoHotkey")
+        
+        if(scriptStatus != Running){    ; We wanna run it
+            try{
+                Run(scriptPath)
                 global MGuiIsDirty := true
-            }else{
-                DetectHiddenWindows "On"
-                DetectHiddenText "On"
-                ; Stop it
-                WinClose(ScriptsArray[index].path)
-                
-                DetectHiddenText "Off"
-                DetectHiddenWindows "Off"
-
-                ; Update the script status and refresh the GUI
-                ScriptsArray[index].status := Stopped
-                global MGuiIsDirty := true
+                UpdateStatus
+            }catch{
+                MsgBox "Couldn't start " scriptPath
             }
+        }else{                          ; We wanna stop it
+            try{
+                if(WinExist(scriptPath)){
+                    WinClose
+                    MGuiIsDirty := true
+                    UpdateStatus
+                }
+            }catch{
+                MsgBox "Couldn't stop " scriptPath
+            }
+        }
     }
-}
-
-SetFocus(*){
-
-}
-
-
-StartScript(*){         ; Saves current program state to drive
-
-}
-
-
-StopAllScripts(*){      ; Saves current program state to drive
-
 }
 
 OpenHelp(*){            ; Saves current program state to drive
@@ -318,63 +305,43 @@ UpdateShowFavorites(ctrl, *){
 UpdateStatus(*) {
     DetectHiddenWindows "On"
     DetectHiddenText "On"
+    global ScriptsRunning := 0
 
-    for k, v in ScriptsArray{ ; Iterate known scripts
-        this_script := ScriptsArray[k]
-        if(this_script.status = Running ){ ; If a script is supposed to be running
-            found := false
-
-            scriptsList := WinGetList("ahk_class AutoHotkey")
-            for k2, v2 in  scriptsList{
-                title := WinGetTitle(scriptsList[k2])
-                title := RegExReplace(title, " - AutoHotkey v[\.0-9]+$")
-
-                if(title = this_script.path){
-                    found := true
-                    break
+        Loop ScriptsArray.Length{
+            scriptIndice := A_Index
+            title := ScriptsArray[scriptIndice].path
+            if(WinExist(title)){
+                if(ScriptsArray[scriptIndice].status != Running){
+                    ScriptsArray[scriptIndice].status := Running
+                    global MGuiIsDirty := true
                 }
+                global ScriptsRunning := ScriptsRunning + 1
+                
             }
-            
-            if(found = true){
-                break
-            }else{
-                ScriptsArray[k].status := Stopped
+
+            if(ScriptsArray[scriptIndice].status = Running
+            and !WinExist(title)){
+                ScriptsArray[scriptIndice].status := Stopped
                 global MGuiIsDirty := true
-                break
+            }
+
+            if(ScriptsArray[scriptIndice].status = Unknown
+                and !WinExist(title)){
+                    ScriptsArray[scriptIndice].status := Stopped
+                    global MGuiIsDirty := true
+
+
             }
         }
-        if(this_script.status != Running){
-            found := false
-
-            scriptsList := WinGetList("ahk_class AutoHotkey")
-            for k3, v3 in  scriptsList{
-                title := WinGetTitle(scriptsList[k3])
-                title := RegExReplace(title, " - AutoHotkey v[\.0-9]+$")
-
-                if(title = this_script.path){
-                    found := true
-                    break
-                }
-            }
-            
-            if(found = true){
-                ScriptsArray[k].status := Running
-                global MGuiIsDirty := true
-                break
-            }else{
-                ScriptsArray[k].status := Stopped
-            }
-        }
-    }
         UpdateGui
         DetectHiddenText "Off"
         DetectHiddenWindows "Off"
 }
 
 UpdateGui(*){
+    LV.ModifyCol(1,, ScriptsRunning)
     if(MGuiIsDirty = true){
-        LV.Opt("-Redraw")
-        LV.ModifyCol(1,, ScriptsRunning)
+        LV.Opt("-Redraw")        
 
         ListScripts
 
@@ -522,23 +489,21 @@ ListScripts(){
                         or loopScript.targetResolution = "Universal"){
 
                         if(loopScript.release = "Stable"){
-                            
+                                LV.Add(,
+                                    loopScript.status, 
+                                    loopScript.title, 
+                                    loopScript.targetApp, 
+                                    loopScript.release, 
+                                    loopScript.targetResolution, 
+                                    loopScript.mainCategory, 
+                                    loopScript.subCategory,
+                                    loopScript.path
+                                )    
                                 
-                            LV.Add(,
-                                loopScript.status, 
-                                loopScript.title, 
-                                loopScript.targetApp, 
-                                loopScript.release, 
-                                loopScript.targetResolution, 
-                                loopScript.mainCategory, 
-                                loopScript.subCategory,
-                                loopScript.path
-                            )    
-
-
-                        }else{
-                             if(ShowExperimental){
-
+                                
+                            }else{
+                                if(ShowExperimental){
+                                    
                                 LV.Add(,
                                     loopScript.status, 
                                     loopScript.title, 
