@@ -1,3 +1,11 @@
+/************************************************************************
+ * @description AHKser Script Manager
+ * @file AHKser.ahk
+ * @author Stefan Darling
+ * @date 2023/11/27
+ * @version 2.0
+ ***********************************************************************/
+
 #Requires AutoHotkey v2.0
 #SingleInstance Force
 #Warn
@@ -35,42 +43,42 @@ ProductVersion := "1.0.10.0"
 TraySetIcon(A_ScriptDir "\assets\appIcon.ico")
 ;@Ahk2Exe-IgnoreEnd
 
-; #ANCHOR - Settings - Program 
+; #ANCHOR - Settings - Program
 Persistent
 SetWorkingDir A_ScriptDir
 OnExit SaveProgramState
 
 ; #ANCHOR Variables - Program
-ProgramTitle            := ProductName
-ConfigFile              := "AHKserSettings.ini"
-Debug                   := true
-DebugLog                := "debug.log"
-ShortTime               := "HH:mm:ss"
+ProgramTitle := ProductName
+ConfigFile := "AHKserSettings.ini"
+Debug := true
+DebugLog := "debug.log"
+ShortTime := "HH:mm:ss"
 
 
 ; #ANCHOR Settings - Program
-TargetAppResolution     := IniRead(ConfigFile, "TargetAppSettings", RTrim("TargetAppResolution", "`r`n"), "Universal")
-ScriptsFolder           := IniRead(ConfigFile, "AHKserSettings", RTrim("ScriptsFolder", "`r`n"), A_ScriptDir "\Scripts")
-ShowFavorites           := IniRead(ConfigFile, "AHKserSettings", RTrim("ShowFavorites", "`r`n"), true)
-ShowExperimental        := IniRead(ConfigFile, "AHKserSettings", RTrim("ShowExperimental", "`r`n"), false)
+TargetAppResolution := IniRead(ConfigFile, "TargetAppSettings", RTrim("TargetAppResolution", "`r`n"), "Universal")
+ScriptsFolder := IniRead(ConfigFile, "AHKserSettings", RTrim("ScriptsFolder", "`r`n"), A_ScriptDir "\Scripts")
+ShowFavorites := IniRead(ConfigFile, "AHKserSettings", RTrim("ShowFavorites", "`r`n"), true)
+ShowExperimental := IniRead(ConfigFile, "AHKserSettings", RTrim("ShowExperimental", "`r`n"), false)
 
-ScriptsArray            := []
-ScriptsStarted          := []
-AppsArray               := []
-ResolutionsArray        := []
-CategoriesArray         := []
-SubCategoriesArray      := []
-FavoriteScriptsArray    := []
-ScriptsRunning          := 0
-TargetAppFilter         := ""
-TargetCategoryFilter    := ""
+ScriptsArray := []
+ScriptsStarted := []
+AppsArray := []
+ResolutionsArray := []
+CategoriesArray := []
+SubCategoriesArray := []
+FavoriteScriptsArray := []
+ScriptsRunning := 0
+TargetAppFilter := ""
+TargetCategoryFilter := ""
 TargetSubCategoryFilter := ""
 
 
 ; #ANCHOR Settings - Tray
-A_AllowMainWindow   := false
-A_IconTip           := ProgramTitle
-TMenu                  := A_TrayMenu
+A_AllowMainWindow := false
+A_IconTip := ProgramTitle
+TMenu := A_TrayMenu
 TMenu.Delete()
 TMenu.Add("Open", OpenGui)
 TMenu.Add("Open", OpenSettings)
@@ -78,34 +86,34 @@ TMenu.Add("Help", OpenHelp)
 TMenu.Add()
 TMenu.Add()
 TMenu.Add("Exit AHKser", StopAHKser)
-TMenu.Default :="Open"
+TMenu.Default := "Open"
 
 ; #ANCHOR Settings - BarMenu
-FMenu           := Menu()
+FMenu := Menu()
 FMenu.Add()
 FMenu.Add("E&xit", StopAHKser)
-BMenu           := MenuBar()
+BMenu := MenuBar()
 Bmenu.Add("&File", FMenu)
 BMenu.Add("&Settings", OpenSettings)
 BMenu.Add("&Help", OpenHelp)
 
 ; #ANCHOR - GUI - Main
-MainGui                 := Gui("-Parent +Resize +MinSize455x150 +OwnDialogs")
-MainGuiIsDirty          := true
-MainGui.Title           := ProgramTitle
-MainGui.MenuBar         := BMenu
+MainGui := Gui("-Parent +Resize +MinSize455x150 +OwnDialogs")
+MainGuiIsDirty := true
+MainGui.Title := ProgramTitle
+MainGui.MenuBar := BMenu
 
 MainGui.Add("Text", "Section", "App:")
-MainGuiAppFilterButton          := MainGui.Add("ComboBox", "XP", AppsArray)
-MainGui.Add("Text","Section YS", "Category:")
-MainGuiCategoryFilterButton     := MainGui.Add("ComboBox","XP", CategoriesArray)
-MainGui.Add("Text","Section YS", "Sub-Category:")
-MainGuiSubCategoryFilterButton    := MainGui.Add("ComboBox","XP", SubCategoriesArray)
+MainGuiAppFilterButton := MainGui.Add("ComboBox", "XP", AppsArray)
+MainGui.Add("Text", "Section YS", "Category:")
+MainGuiCategoryFilterButton := MainGui.Add("ComboBox", "XP", CategoriesArray)
+MainGui.Add("Text", "Section YS", "Sub-Category:")
+MainGuiSubCategoryFilterButton := MainGui.Add("ComboBox", "XP", SubCategoriesArray)
 
 ListViewColumns := [" ", "Script Name", "App", "Branch", "Resolution", "Category", "Sub-Category", "Path"]
 MainGuiListView := MainGui.Add("ListView", "Section XM -multi r10 W450", ListViewColumns)
 
-StsBar               := MainGui.Add("StatusBar",,)
+StsBar := MainGui.Add("StatusBar", ,)
 
 
 ; #ANCHOR - GUI - Main - OnEvent
@@ -118,18 +126,18 @@ MainGui.OnEvent("Close", StopAHKser)
 
 ; #ANCHOR - Gui - Settings
 SettingsGui := Gui("-Resize +ToolWindow +Owner" MainGui.Hwnd)
-SettingsGuiFavoriteCheckbox         := SettingsGui.Add("CheckBox", "vFavoriteShow","Show favorite scripts.")
+SettingsGuiFavoriteCheckbox := SettingsGui.Add("CheckBox", "vFavoriteShow", "Show favorite scripts.")
 SettingsGuiFavoriteCheckbox.Visible := false
-SettingsGuiExperimentalCheckbox          := SettingsGui.Add("CheckBox", "vExperimentalShow","Show experimental scripts.")
+SettingsGuiExperimentalCheckbox := SettingsGui.Add("CheckBox", "vExperimentalShow", "Show experimental scripts.")
 
-SettingsGui.Add("Text", "XP YP+20","Resolution")
-SettingsGuiResolutionFilterButton      := SettingsGui.Add("ComboBox", "XP+0 YP+15", ResolutionsArray)
+SettingsGui.Add("Text", "XP YP+20", "Resolution")
+SettingsGuiResolutionFilterButton := SettingsGui.Add("ComboBox", "XP+0 YP+15", ResolutionsArray)
 SettingsGuiResolutionFilterButton.Text := TargetAppResolution
 
-ScriptFolderButton               := SettingsGui.Add("Button","Section r2 w60","Scripts`nFolder")
-AppFolderButton               := SettingsGui.Add("Button","YS XP+65 r2 w60","App`nFolder")
+ScriptFolderButton := SettingsGui.Add("Button", "Section r2 w60", "Scripts`nFolder")
+AppFolderButton := SettingsGui.Add("Button", "YS XP+65 r2 w60", "App`nFolder")
 
-SettingsGui.Add("Text","Section XS YS+60","Press Escape to close this window.")
+SettingsGui.Add("Text", "Section XS YS+60", "Press Escape to close this window.")
 
 ; #ANCHOR - Gui - Settings - OnEvents
 SettingsGui.OnEvent("Close", CloseSettings)
@@ -139,93 +147,93 @@ AppFolderButton.OnEvent("Click", OpenAppFolder)
 
 
 ; #ANCHOR - Symbols - Status
-Running                 := "✓"
-Stopped                 := "X"
-Unknown                 := "?"
+Running := "✓"
+Stopped := "X"
+Unknown := "?"
 
 
 ; #ANCHOR - Script Class
-class Script{
-    title               := unknown
-    version             := unknown
-    author              := unknown
-    targetApp           := unknown
-    targetVersion       := unknown
-    targetResolution    := unknown
-    description         := unknown
-    mainCategory        := unknown
-    subCategory         := unknown
-    release             := unknown
-    status              := unknown
-    path                := unknown
-    reference           := unknown
+class Script {
+    title := unknown
+    version := unknown
+    author := unknown
+    targetApp := unknown
+    targetVersion := unknown
+    targetResolution := unknown
+    description := unknown
+    mainCategory := unknown
+    subCategory := unknown
+    release := unknown
+    status := unknown
+    path := unknown
+    reference := unknown
 }
 
 
 ; #ANCHOR - Functions
-OpenScriptsFolder(*){
+OpenScriptsFolder(*) {
     try {
         DirCreate("Scripts\Universal")
         Run "explore " ScriptsFolder
-    }catch{
+    } catch {
         MsgBox "Couldn't create " ScriptsFolder
     }
 }
 
-OpenAppFolder(*){
+OpenAppFolder(*) {
 
     try {
-    Run "explore " A_WorkingDir
-    }catch{
+        Run "explore " A_WorkingDir
+    } catch {
         MsgBox "Couldn't open " A_WorkingDir
     }
 
 }
 
-FilterApps(ctrl, *){    
-    if(ctrl.Value > 0){
+FilterApps(ctrl, *) {
+    if (ctrl.Value > 0) {
         global TargetAppFilter := AppsArray[ctrl.Value]
-    }else{
+    } else {
         global TargetAppFilter := ""
-    } 
+    }
 
     global MainGuiIsDirty := true
     UpdateGui
 }
 
-FilterCategory(ctrl, *){    
-    if(ctrl.Value > 0){
+FilterCategory(ctrl, *) {
+    if (ctrl.Value > 0) {
         global TargetCategoryFilter := CategoriesArray[ctrl.Value]
-    }else{
+    } else {
         global TargetCategoryFilter := ""
-    } 
+    }
 
     global MainGuiIsDirty := true
     UpdateGui
 }
 
-FilterSubCategory(ctrl, *){    
-    if(ctrl.Value > 0){
+FilterSubCategory(ctrl, *) {
+    if (ctrl.Value > 0) {
         global TargetSubCategoryFilter := SubCategoriesArray[ctrl.Value]
-    }else{
+    } else {
         global TargetSubCategoryFilter := ""
-    } 
+    }
 
     global MainGuiIsDirty := true
     UpdateGui
 }
 
-FilterResolution(obj, info, resolution := TargetAppResolution){
-    if(obj != ""){
-            if ( obj.Value > 0){
-                global TargetAppResolution := ResolutionsArray[obj.Value]
-            }else{
-                global TargetAppResolution := ""
-            }
+FilterResolution(obj, info, resolution := TargetAppResolution) {
+    if (obj != "") {
+        if (obj.Value > 0) {
+            global TargetAppResolution := ResolutionsArray[obj.Value]
+        } else {
+            global TargetAppResolution := ""
         }
+    }
 
-        global MainGuiIsDirty := true
-        UpdateGui
+    global MainGuiIsDirty := true
+    UpdateGui
 }
 
 GuiResize(thisGui, MinMax, Width, Height)  ; Expand/Shrink ListView in response to the user's resizing.
@@ -233,80 +241,79 @@ GuiResize(thisGui, MinMax, Width, Height)  ; Expand/Shrink ListView in response 
     if MinMax = -1  ; The window has been minimized. No action needed.
         return
     ; Otherwise, the window has been resized or maximized. Resize the ListView to match.
-    MainGuiListView.Move(,, Width - 20, Height - 80)
+    MainGuiListView.Move(, , Width - 20, Height - 80)
 }
 
-ToggleScriptStatus(ctrl, index){
-    ; #FIXME
+ToggleScriptStatus(ctrl, index) {
 
-    if(index > 0){
+    if (index > 0) {
 
-        scriptStatus    := MainGuiListView.GetText(index,1)
-        scriptPath      := MainGuiListView.GetText(index,8)
+        scriptStatus := MainGuiListView.GetText(index, 1)
+        scriptPath := MainGuiListView.GetText(index, 8)
 
         runningScripts := WinGetList("ahk_class AutoHotkey")
-        
-        if(scriptStatus != Running){    ; We wanna run it
-            try{
+
+        if (scriptStatus != Running) {    ; We wanna run it
+            try {
                 Run(scriptPath)
                 global MainGuiIsDirty := true
                 UpdateStatus
-            }catch{
+            } catch {
                 MsgBox "Couldn't start " scriptPath
             }
-        }else{                          ; We wanna stop it
-            try{
-                if(WinExist(scriptPath)){
+        } else {                          ; We wanna stop it
+            try {
+                if (WinExist(scriptPath)) {
                     WinClose
                     MainGuiIsDirty := true
                     UpdateStatus
                 }
-            }catch{
+            } catch {
                 MsgBox "Couldn't stop " scriptPath
             }
         }
     }
 }
 
-OpenHelp(*){            ; Saves current program state to drive
-    try{
-    Run "https://github.com/Stefarling/AHKser/wiki"
-    }catch{
+OpenHelp(*) {            ; Saves current program state to drive
+    try {
+        Run "https://github.com/Stefarling/AHKser/wiki"
+    } catch {
         MsgBox "Couldn't open https://github.com/Stefarling/AHKser/wiki"
     }
 }
 
-OpenGui(*){             ; Saves current program state to drive
+OpenGui(*) {             ; Saves current program state to drive
     MainGui.Show()
 }
 
-OpenSettings(*){        ; Saves current program state to drive
+OpenSettings(*) {        ; Saves current program state to drive
     MainGui.Opt("+Disabled")
     SettingsGuiResolutionFilterButton.Text := TargetAppResolution
-    SettingsGuiExperimentalCheckbox.value    := ShowExperimental
+    SettingsGuiExperimentalCheckbox.value := ShowExperimental
 
-    SettingsGuiResolutionFilterButton.OnEvent("Change", FilterResolution )
+    SettingsGuiResolutionFilterButton.OnEvent("Change", FilterResolution)
     SettingsGuiExperimentalCheckbox.OnEvent("Click", UpdateShowExperimental)
     SettingsGuiFavoriteCheckbox.OnEvent("Click", UpdateShowFavorites)
 
     SettingsGui.Show
 }
 
-CloseSettings(thisgui){
+CloseSettings(thisgui) {
     MainGui.Opt("-Disabled")
     SettingsGui.Hide
     SaveProgramState
     return true
 }
 
-UpdateShowExperimental(ctrl, *){
+UpdateShowExperimental(ctrl, *) {
     global ShowExperimental := ctrl.Value
 
     global MainGuiIsDirty := true
     UpdateGui
 }
 
-UpdateShowFavorites(ctrl, *){
+UpdateShowFavorites(ctrl, *) {
     global ShowFavorites := ctrl.Value
 
     global MainGuiIsDirty := true
@@ -318,41 +325,41 @@ UpdateStatus(*) {
     DetectHiddenText "On"
     global ScriptsRunning := 0
 
-        Loop ScriptsArray.Length{
-            scriptIndice := A_Index
-            title := ScriptsArray[scriptIndice].path
-            if(WinExist(title)){
-                if(ScriptsArray[scriptIndice].status != Running){
-                    ScriptsArray[scriptIndice].status := Running
-                    global MainGuiIsDirty := true
-                }
-                global ScriptsRunning := ScriptsRunning + 1
-                
-            }
-
-            if(ScriptsArray[scriptIndice].status = Running
-            and !WinExist(title)){
-                ScriptsArray[scriptIndice].status := Stopped
+    Loop ScriptsArray.Length {
+        scriptIndice := A_Index
+        title := ScriptsArray[scriptIndice].path
+        if (WinExist(title)) {
+            if (ScriptsArray[scriptIndice].status != Running) {
+                ScriptsArray[scriptIndice].status := Running
                 global MainGuiIsDirty := true
             }
+            global ScriptsRunning := ScriptsRunning + 1
 
-            if(ScriptsArray[scriptIndice].status = Unknown
-                and !WinExist(title)){
-                    ScriptsArray[scriptIndice].status := Stopped
-                    global MainGuiIsDirty := true
-
-
-            }
         }
-        UpdateGui
-        DetectHiddenText "Off"
-        DetectHiddenWindows "Off"
+
+        if (ScriptsArray[scriptIndice].status = Running
+            and !WinExist(title)) {
+                ScriptsArray[scriptIndice].status := Stopped
+                global MainGuiIsDirty := true
+        }
+
+        if (ScriptsArray[scriptIndice].status = Unknown
+            and !WinExist(title)) {
+                ScriptsArray[scriptIndice].status := Stopped
+                global MainGuiIsDirty := true
+
+
+        }
+    }
+    UpdateGui
+    DetectHiddenText "Off"
+    DetectHiddenWindows "Off"
 }
 
-UpdateGui(*){
-    MainGuiListView.ModifyCol(1,, ScriptsRunning)
-    if(MainGuiIsDirty = true){
-        MainGuiListView.Opt("-Redraw")        
+UpdateGui(*) {
+    MainGuiListView.ModifyCol(1, , ScriptsRunning)
+    if (MainGuiIsDirty = true) {
+        MainGuiListView.Opt("-Redraw")
 
         ListScripts
 
@@ -363,100 +370,100 @@ UpdateGui(*){
 
 }
 
-FindScripts(){
+FindScripts() {
 
     Loop Files, ScriptsFolder "\*ahk", "R"
-        {
-            fileText        := FileRead(A_LoopFileFullPath)
-            cls             := Script.Call()
+    {
+        fileText := FileRead(A_LoopFileFullPath)
+        cls := Script.Call()
 
-            Loop Parse fileText,";|`n",A_Space A_Tab{
-                if(InStr(A_LoopField, "TITLE", "On")){
-                    cls.title := RTrim(RegExReplace(A_LoopField, "TITLE "), "`r`n")
-                }
-                if(InStr(A_LoopField, "SCRIPTVERSION", "On")){
-                    cls.version := RTrim(RegExReplace(A_LoopField, "SCRIPTVERSION "), "`r`n")
-                }
-                if(InStr(A_LoopField, "TARGETAPP", "On")){
-                    cls.targetApp := RTrim(RegExReplace(A_LoopField, "TARGETAPP "), "`r`n")
-                    UpdateApps(cls.targetApp)
-                }
-                if(InStr(A_LoopField, "TARGETVERSION", "On")){
-                    cls.targetVersion := RTrim(RegExReplace(A_LoopField, "TARGETVERSION "), "`r`n")
-                }
-                if(InStr(A_LoopField, "TARGETRESOLUTION", "On")){
-                    cls.targetResolution := RTrim(RegExReplace(A_LoopField, "TARGETRESOLUTION "), "`r`n")
-                    UpdateResolutions(cls.targetResolution)
-                }
-                if(InStr(A_LoopField, "AUTHOR", "On")){
-                    cls.author := RTrim(RegExReplace(A_LoopField, "AUTHOR "), "`r`n")
-                }
-                if(InStr(A_LoopField, "DESCRIPTION", "On")){
-                    cls.description := RTrim(RegExReplace(A_LoopField, "DESCRIPTION "), "`r`n")
-                }
-                if(InStr(A_LoopField, "MAINCATEGORY", "On")){
-                    cls.mainCategory := RTrim(RegExReplace(A_LoopField, "MAINCATEGORY "), "`r`n")
-                    UpdateCategories(cls.mainCategory)
-                }
-                if(InStr(A_LoopField, "SUBCATEGORY", "On")){
-                    cls.subCategory := RTrim(RegExReplace(A_LoopField, "SUBCATEGORY "), "`r`n")
-                    UpdateSubCategories(cls.subCategory)
-                }
-                if(InStr(A_LoopField, "RELEASE", "On")){
-                    cls.release := RTrim(RegExReplace(A_LoopField, "RELEASE "), "`r`n")
-                }
-                cls.path := A_LoopFileFullPath
-                cls.status := Unknown
-                cls.reference := &cls
+        Loop Parse fileText, ";|`n", A_Space A_Tab {
+            if (InStr(A_LoopField, "TITLE", "On")) {
+                cls.title := RTrim(RegExReplace(A_LoopField, "TITLE "), "`r`n")
             }
-            ScriptsArray.Push(cls)
+            if (InStr(A_LoopField, "SCRIPTVERSION", "On")) {
+                cls.version := RTrim(RegExReplace(A_LoopField, "SCRIPTVERSION "), "`r`n")
+            }
+            if (InStr(A_LoopField, "TARGETAPP", "On")) {
+                cls.targetApp := RTrim(RegExReplace(A_LoopField, "TARGETAPP "), "`r`n")
+                UpdateApps(cls.targetApp)
+            }
+            if (InStr(A_LoopField, "TARGETVERSION", "On")) {
+                cls.targetVersion := RTrim(RegExReplace(A_LoopField, "TARGETVERSION "), "`r`n")
+            }
+            if (InStr(A_LoopField, "TARGETRESOLUTION", "On")) {
+                cls.targetResolution := RTrim(RegExReplace(A_LoopField, "TARGETRESOLUTION "), "`r`n")
+                UpdateResolutions(cls.targetResolution)
+            }
+            if (InStr(A_LoopField, "AUTHOR", "On")) {
+                cls.author := RTrim(RegExReplace(A_LoopField, "AUTHOR "), "`r`n")
+            }
+            if (InStr(A_LoopField, "DESCRIPTION", "On")) {
+                cls.description := RTrim(RegExReplace(A_LoopField, "DESCRIPTION "), "`r`n")
+            }
+            if (InStr(A_LoopField, "MAINCATEGORY", "On")) {
+                cls.mainCategory := RTrim(RegExReplace(A_LoopField, "MAINCATEGORY "), "`r`n")
+                UpdateCategories(cls.mainCategory)
+            }
+            if (InStr(A_LoopField, "SUBCATEGORY", "On")) {
+                cls.subCategory := RTrim(RegExReplace(A_LoopField, "SUBCATEGORY "), "`r`n")
+                UpdateSubCategories(cls.subCategory)
+            }
+            if (InStr(A_LoopField, "RELEASE", "On")) {
+                cls.release := RTrim(RegExReplace(A_LoopField, "RELEASE "), "`r`n")
+            }
+            cls.path := A_LoopFileFullPath
+            cls.status := Unknown
+            cls.reference := &cls
         }
+        ScriptsArray.Push(cls)
+    }
 }
 
-UpdateApps(app){
-    
+UpdateApps(app) {
+
     found := false
-    
-    for k, v in AppsArray{
-        if(app = v){
+
+    for k, v in AppsArray {
+        if (app = v) {
             found := true
         }
     }
-    
-    if(!found){
+
+    if (!found) {
         AppsArray.Push(app)
         MainGuiAppFilterButton.Delete()
         MainGuiAppFilterButton.Add(AppsArray)
     }
 }
 
-UpdateCategories(category){
+UpdateCategories(category) {
 
     found := false
 
-    for k, v in CategoriesArray{
-        if(category = v){
+    for k, v in CategoriesArray {
+        if (category = v) {
             found := true
         }
     }
 
-    if(!found){
+    if (!found) {
         CategoriesArray.Push(category)
         MainGuiCategoryFilterButton.Delete()
         MainGuiCategoryFilterButton.Add(CategoriesArray)
     }
 }
 
-UpdateSubCategories(category){
+UpdateSubCategories(category) {
     found := false
 
-    for k, v in SubCategoriesArray{
-        if(category = v){
+    for k, v in SubCategoriesArray {
+        if (category = v) {
             found := true
         }
     }
 
-    if(!found){
+    if (!found) {
         SubCategoriesArray.Push(category)
         MainGuiSubCategoryFilterButton.Delete()
         MainGuiSubCategoryFilterButton.Add(SubCategoriesArray)
@@ -464,16 +471,16 @@ UpdateSubCategories(category){
 
 }
 
-UpdateResolutions(resolution){
+UpdateResolutions(resolution) {
     found := false
 
-    for k, v in ResolutionsArray{
-        if(resolution = v or resolution = "Unknown"){
+    for k, v in ResolutionsArray {
+        if (resolution = v or resolution = "Unknown") {
             found := true
         }
     }
 
-    if(!found){
+    if (!found) {
         ResolutionsArray.Push(resolution)
         SettingsGuiResolutionFilterButton.Delete()
         SettingsGuiResolutionFilterButton.Add(ResolutionsArray)
@@ -481,87 +488,87 @@ UpdateResolutions(resolution){
 
 }
 
-ListScripts(){
+ListScripts() {
     MainGuiListView.Delete()
 
-    Loop ScriptsArray.Length{
+    Loop ScriptsArray.Length {
         loopScript := ScriptsArray[A_Index]
 
-        if(TargetAppFilter = loopScript.targetApp or TargetAppFilter = ""){
+        if (TargetAppFilter = loopScript.targetApp or TargetAppFilter = "") {
 
-            if(TargetCategoryFilter = loopScript.mainCategory 
-                or TargetCategoryFilter = ""){
-                
-                if(TargetSubCategoryFilter = loopScript.subCategory 
-                    or TargetSubCategoryFilter = ""){
-                    
-                    if(TargetAppResolution = loopScript.targetResolution
-                        or TargetAppResolution = "" 
-                        or loopScript.targetResolution = "Universal"){
+            if (TargetCategoryFilter = loopScript.mainCategory
+                or TargetCategoryFilter = "") {
 
-                        if(loopScript.release = "Stable"){
-                                MainGuiListView.Add(,
-                                    loopScript.status, 
-                                    loopScript.title, 
-                                    loopScript.targetApp, 
-                                    loopScript.release, 
-                                    loopScript.targetResolution, 
-                                    loopScript.mainCategory, 
-                                    loopScript.subCategory,
-                                    loopScript.path
-                                )    
-                                
-                                
-                            }else{
-                                if(ShowExperimental){
-                                    
-                                MainGuiListView.Add(,
-                                    loopScript.status, 
-                                    loopScript.title, 
-                                    loopScript.targetApp, 
-                                    loopScript.release, 
-                                    loopScript.targetResolution, 
-                                    loopScript.mainCategory, 
-                                    loopScript.subCategory,
-                                    loopScript.path
-                                )
+                    if (TargetSubCategoryFilter = loopScript.subCategory
+                        or TargetSubCategoryFilter = "") {
+
+                            if (TargetAppResolution = loopScript.targetResolution
+                                or TargetAppResolution = ""
+                                or loopScript.targetResolution = "Universal") {
+
+                                    if (loopScript.release = "Stable") {
+                                        MainGuiListView.Add(,
+                                            loopScript.status,
+                                            loopScript.title,
+                                            loopScript.targetApp,
+                                            loopScript.release,
+                                            loopScript.targetResolution,
+                                            loopScript.mainCategory,
+                                            loopScript.subCategory,
+                                            loopScript.path
+                                        )
+
+
+                                    } else {
+                                        if (ShowExperimental) {
+
+                                            MainGuiListView.Add(,
+                                                loopScript.status,
+                                                loopScript.title,
+                                                loopScript.targetApp,
+                                                loopScript.release,
+                                                loopScript.targetResolution,
+                                                loopScript.mainCategory,
+                                                loopScript.subCategory,
+                                                loopScript.path
+                                            )
+                                        }
+                                    }
                             }
-                        }
                     }
-                }
             }
         }
     }
     AdjustColumns
 }
 
-InitializeAHKser(){
+InitializeAHKser() {
 
     FindScripts
     UpdateStatus
-    FilterResolution("","",TargetAppResolution)
+    FilterResolution("", "", TargetAppResolution)
     MainGuiListView.ModifyCol(2, "Sort")
     MainGuiListView.ModifyCol(8, "0")
 }
 
-AdjustColumns(*){
-    Loop MainGuiListView.GetCount("Column"){
+AdjustColumns(*) {
+    Loop MainGuiListView.GetCount("Column") {
         MainGuiListView.ModifyCol(A_Index, "+AutoHdr")
     }
     MainGuiListView.ModifyCol(8, "-AutoHdr 0")
 }
 
-SaveProgramState(*){    ; Saves current program state to drive
-    IniWrite(RTrim(TargetAppResolution,"`r`n"), ConfigFile, "TargetAppSettings", "TargetAppResolution")
-    IniWrite(RTrim(ShowFavorites,"`r`n"), ConfigFile, "AHKserSettings", "ShowFavorites")
-    IniWrite(RTrim(ShowExperimental,"`r`n"), ConfigFile, "AHKserSettings", "ShowExperimental")
-    IniWrite(RTrim(ScriptsFolder,"`r`n"), ConfigFile, "AHKserSettings", "ScriptsFolder")
+SaveProgramState(*) {    ; Saves current program state to drive
+    IniWrite(RTrim(TargetAppResolution, "`r`n"), ConfigFile, "TargetAppSettings", "TargetAppResolution")
+    IniWrite(RTrim(ShowFavorites, "`r`n"), ConfigFile, "AHKserSettings", "ShowFavorites")
+    IniWrite(RTrim(ShowExperimental, "`r`n"), ConfigFile, "AHKserSettings", "ShowExperimental")
+    IniWrite(RTrim(ScriptsFolder, "`r`n"), ConfigFile, "AHKserSettings", "ScriptsFolder")
 
 }
 
-StopAHKser(*){
-        SaveProgramState
-        ExitApp(0)
+StopAHKser(*) {
+    SaveProgramState
+    ExitApp(0)
 }
 
 InitializeAHKser
