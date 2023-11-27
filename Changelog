@@ -1,4 +1,5 @@
 # v1.0.4
+Removed compiler files.
 Fixed column width resizing. Hid path column for the moment. Try to find it!
 Added compiler directives. Not really relevant to the end user.
 Reworked settings dialog.
