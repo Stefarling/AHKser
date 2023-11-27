@@ -1,6 +1,7 @@
 *.zip
 *.ini
 *.log
+*.csv
 Scripts/*
 !Universal
 *.exe
