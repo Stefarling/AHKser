@@ -3,23 +3,37 @@
 #Warn
 #ErrorStdOut
 
-; Shenanigans in the RegEx required 4 version numbers.
-CodeVersion := "1.0.3.1"
-;@Ahk2Exe-Let U_version = %A_PriorLine~U)^(.+"){1}(.+)".*$~$2%
-;@Ahk2Exe-Let U_company = %A_PriorLine~U)^(.+"){3}(.+)".*$~$2%
+CompanyName := "Stefarling"
+;@Ahk2Exe-Let U_companyName = %A_PriorLine~U)^(CompanyName \:\= \")(.+?)+(\")$~$2%
+;@Ahk2Exe-SetCompanyName %U_companyName%
+
+Copyright := "The Unlicense"
+;@Ahk2Exe-Let U_copyright = %A_PriorLine~U)^(Copyright \:\= \")(.+?)+(\")$~$2%
+;@Ahk2Exe-SetCopyright %U_copyright%
+
+Description := "AHKser Script Manager"
+;@Ahk2Exe-Let U_description = %A_PriorLine~U)^(Description \:\= \")(.+?)+(\")$~$2%
+;@Ahk2Exe-SetDescription %U_description%
+
+FileVersion := "2.0"
+;@Ahk2Exe-Let U_fileVersion = %A_PriorLine~U)^(FileVersion \:\= \")(.+?)+(\")$~$2%
+;@Ahk2Exe-SetFileVersion %U_fileVersion%
+
+ProductName := "AHKser Script Manager"
+;@Ahk2Exe-Let U_productName = %A_PriorLine~U)^(ProductName \:\= \")(.+?)+(\")$~$2%
+;@Ahk2Exe-SetName %U_productName%
+
+ProductVersion := "1.0.10.0"
+;@Ahk2Exe-Let U_productVersion = %A_PriorLine~U)^(ProductVersion \:\= \")(.+?)+(\")$~$2%
+;@Ahk2Exe-SetProductVersion %U_productVersion%
+
 ;@Ahk2Exe-SetMainIcon assets\appIcon.ico
-;@Ahk2Exe-SetName AHKser
-;@Ahk2Exe-SetVersion %U_version%
-;@Ahk2Exe-SetFileVersion %U_version%
 ;@Ahk2Exe-Base ..\v2\AutoHotkey64.exe, compiled\
-;@Ahk2Exe-ExeName %A_ScriptName~(\.ahk){1}%-V%U_version%
+;@Ahk2Exe-ExeName %A_ScriptName%
 
 ;@Ahk2Exe-IgnoreBegin
 TraySetIcon(A_ScriptDir "\assets\appIcon.ico")
 ;@Ahk2Exe-IgnoreEnd
-
-
-
 
 ; #ANCHOR - Settings - Program 
 Persistent
@@ -27,7 +41,7 @@ SetWorkingDir A_ScriptDir
 OnExit SaveProgramState
 
 ; #ANCHOR Variables - Program
-ProgramTitle            := "AHKser Script Manager"
+ProgramTitle            := ProductName
 ConfigFile              := "AHKserSettings.ini"
 Debug                   := true
 DebugLog                := "debug.log"
@@ -76,52 +90,52 @@ BMenu.Add("&Settings", OpenSettings)
 BMenu.Add("&Help", OpenHelp)
 
 ; #ANCHOR - GUI - Main
-MGui                 := Gui("-Parent +Resize +MinSize455x150 +OwnDialogs")
-MGuiIsDirty          := true
-MGui.Title           := ProgramTitle
-MGui.MenuBar         := BMenu
+MainGui                 := Gui("-Parent +Resize +MinSize455x150 +OwnDialogs")
+MainGuiIsDirty          := true
+MainGui.Title           := ProgramTitle
+MainGui.MenuBar         := BMenu
 
-MGui.Add("Text", "Section", "App:")
-MGuiAppFltrBtn          := MGui.Add("ComboBox", "XP", AppsArray)
-MGui.Add("Text","Section YS", "Category:")
-MGuiCtgryFltrBtn     := MGui.Add("ComboBox","XP", CategoriesArray)
-MGui.Add("Text","Section YS", "Sub-Category:")
-MGuiSCtgryFltrBtn    := MGui.Add("ComboBox","XP", SubCategoriesArray)
+MainGui.Add("Text", "Section", "App:")
+MainGuiAppFilterButton          := MainGui.Add("ComboBox", "XP", AppsArray)
+MainGui.Add("Text","Section YS", "Category:")
+MainGuiCategoryFilterButton     := MainGui.Add("ComboBox","XP", CategoriesArray)
+MainGui.Add("Text","Section YS", "Sub-Category:")
+MainGuiSubCategoryFilterButton    := MainGui.Add("ComboBox","XP", SubCategoriesArray)
 
-LVColumns := [" ", "Script Name", "App", "Branch", "Resolution", "Category", "Sub-Category", "Path"]
-LV := MGui.Add("ListView", "Section XM -multi  r10 W450", LVColumns)
+ListViewColumns := [" ", "Script Name", "App", "Branch", "Resolution", "Category", "Sub-Category", "Path"]
+MainGuiListView := MainGui.Add("ListView", "Section XM -multi r10 W450", ListViewColumns)
 
-StsBar               := MGui.Add("StatusBar",,)
+StsBar               := MainGui.Add("StatusBar",,)
 
 
 ; #ANCHOR - GUI - Main - OnEvent
-LV.OnEvent("DoubleClick", ToggleScriptStatus)
-MGui.OnEvent("Size", GuiResize)
-MGuiAppFltrBtn.OnEvent("Change", FilterApps)
-MGuiCtgryFltrBtn.OnEvent("Change", FilterCategory)
-MGuiSCtgryFltrBtn.OnEvent("Change", FilterSubCategory)
-MGui.OnEvent("Close", StopAHKser)
+MainGuiListView.OnEvent("DoubleClick", ToggleScriptStatus)
+MainGui.OnEvent("Size", GuiResize)
+MainGuiAppFilterButton.OnEvent("Change", FilterApps)
+MainGuiCategoryFilterButton.OnEvent("Change", FilterCategory)
+MainGuiSubCategoryFilterButton.OnEvent("Change", FilterSubCategory)
+MainGui.OnEvent("Close", StopAHKser)
 
 ; #ANCHOR - Gui - Settings
-SGui := Gui("-Resize +ToolWindow +Owner" MGui.Hwnd)
-FvritChkbox         := SGui.Add("CheckBox", "vFavoriteShow","Show favorite scripts.")
-FvritChkbox.Visible := false
-ExplChkbox          := SGui.Add("CheckBox", "vExperimentalShow","Show experimental scripts.")
+SettingsGui := Gui("-Resize +ToolWindow +Owner" MainGui.Hwnd)
+SettingsGuiFavoriteCheckbox         := SettingsGui.Add("CheckBox", "vFavoriteShow","Show favorite scripts.")
+SettingsGuiFavoriteCheckbox.Visible := false
+SettingsGuiExperimentalCheckbox          := SettingsGui.Add("CheckBox", "vExperimentalShow","Show experimental scripts.")
 
-SGui.Add("Text", "XP YP+20","Resolution")
-SGuiResFltrBtn      := SGui.Add("ComboBox", "XP+0 YP+15", ResolutionsArray)
-SGuiResFltrBtn.Text := TargetAppResolution
+SettingsGui.Add("Text", "XP YP+20","Resolution")
+SettingsGuiResolutionFilterButton      := SettingsGui.Add("ComboBox", "XP+0 YP+15", ResolutionsArray)
+SettingsGuiResolutionFilterButton.Text := TargetAppResolution
 
-ScrDirBtn               := SGui.Add("Button","Section r2 w60","Scripts`nFolder")
-AppDirBtn               := SGui.Add("Button","YS XP+65 r2 w60","App`nFolder")
+ScriptFolderButton               := SettingsGui.Add("Button","Section r2 w60","Scripts`nFolder")
+AppFolderButton               := SettingsGui.Add("Button","YS XP+65 r2 w60","App`nFolder")
 
-SGui.Add("Text","Section XS YS+60","Press Escape to close this window.")
+SettingsGui.Add("Text","Section XS YS+60","Press Escape to close this window.")
 
 ; #ANCHOR - Gui - Settings - OnEvents
-SGui.OnEvent("Close", CloseSettings)
-SGui.OnEvent("Escape", CloseSettings)
-ScrDirBtn.OnEvent("Click", OpenScriptsFolder)
-AppDirBtn.OnEvent("Click", OpenAppFolder)
+SettingsGui.OnEvent("Close", CloseSettings)
+SettingsGui.OnEvent("Escape", CloseSettings)
+ScriptFolderButton.OnEvent("Click", OpenScriptsFolder)
+AppFolderButton.OnEvent("Click", OpenAppFolder)
 
 
 ; #ANCHOR - Symbols - Status
@@ -175,7 +189,7 @@ FilterApps(ctrl, *){
         global TargetAppFilter := ""
     } 
 
-    global MGuiIsDirty := true
+    global MainGuiIsDirty := true
     UpdateGui
 }
 
@@ -186,7 +200,7 @@ FilterCategory(ctrl, *){
         global TargetCategoryFilter := ""
     } 
 
-    global MGuiIsDirty := true
+    global MainGuiIsDirty := true
     UpdateGui
 }
 
@@ -197,7 +211,7 @@ FilterSubCategory(ctrl, *){
         global TargetSubCategoryFilter := ""
     } 
 
-    global MGuiIsDirty := true
+    global MainGuiIsDirty := true
     UpdateGui
 }
 
@@ -210,7 +224,7 @@ FilterResolution(obj, info, resolution := TargetAppResolution){
             }
         }
 
-        global MGuiIsDirty := true
+        global MainGuiIsDirty := true
         UpdateGui
 }
 
@@ -219,7 +233,7 @@ GuiResize(thisGui, MinMax, Width, Height)  ; Expand/Shrink ListView in response 
     if MinMax = -1  ; The window has been minimized. No action needed.
         return
     ; Otherwise, the window has been resized or maximized. Resize the ListView to match.
-    LV.Move(,, Width - 20, Height - 80)
+    MainGuiListView.Move(,, Width - 20, Height - 80)
 }
 
 ToggleScriptStatus(ctrl, index){
@@ -227,15 +241,15 @@ ToggleScriptStatus(ctrl, index){
 
     if(index > 0){
 
-        scriptStatus    := LV.GetText(index,1)
-        scriptPath      := LV.GetText(index,8)
+        scriptStatus    := MainGuiListView.GetText(index,1)
+        scriptPath      := MainGuiListView.GetText(index,8)
 
         runningScripts := WinGetList("ahk_class AutoHotkey")
         
         if(scriptStatus != Running){    ; We wanna run it
             try{
                 Run(scriptPath)
-                global MGuiIsDirty := true
+                global MainGuiIsDirty := true
                 UpdateStatus
             }catch{
                 MsgBox "Couldn't start " scriptPath
@@ -244,7 +258,7 @@ ToggleScriptStatus(ctrl, index){
             try{
                 if(WinExist(scriptPath)){
                     WinClose
-                    MGuiIsDirty := true
+                    MainGuiIsDirty := true
                     UpdateStatus
                 }
             }catch{
@@ -263,24 +277,24 @@ OpenHelp(*){            ; Saves current program state to drive
 }
 
 OpenGui(*){             ; Saves current program state to drive
-    MGui.Show()
+    MainGui.Show()
 }
 
 OpenSettings(*){        ; Saves current program state to drive
-    MGui.Opt("+Disabled")
-    SGuiResFltrBtn.Text := TargetAppResolution
-    ExplChkbox.value    := ShowExperimental
+    MainGui.Opt("+Disabled")
+    SettingsGuiResolutionFilterButton.Text := TargetAppResolution
+    SettingsGuiExperimentalCheckbox.value    := ShowExperimental
 
-    SGuiResFltrBtn.OnEvent("Change", FilterResolution )
-    ExplChkbox.OnEvent("Click", UpdateShowExperimental)
-    FvritChkbox.OnEvent("Click", UpdateShowFavorites)
+    SettingsGuiResolutionFilterButton.OnEvent("Change", FilterResolution )
+    SettingsGuiExperimentalCheckbox.OnEvent("Click", UpdateShowExperimental)
+    SettingsGuiFavoriteCheckbox.OnEvent("Click", UpdateShowFavorites)
 
-    SGui.Show
+    SettingsGui.Show
 }
 
 CloseSettings(thisgui){
-    MGui.Opt("-Disabled")
-    SGui.Hide
+    MainGui.Opt("-Disabled")
+    SettingsGui.Hide
     SaveProgramState
     return true
 }
@@ -288,14 +302,14 @@ CloseSettings(thisgui){
 UpdateShowExperimental(ctrl, *){
     global ShowExperimental := ctrl.Value
 
-    global MGuiIsDirty := true
+    global MainGuiIsDirty := true
     UpdateGui
 }
 
 UpdateShowFavorites(ctrl, *){
     global ShowFavorites := ctrl.Value
 
-    global MGuiIsDirty := true
+    global MainGuiIsDirty := true
     UpdateGui
 }
 
@@ -310,7 +324,7 @@ UpdateStatus(*) {
             if(WinExist(title)){
                 if(ScriptsArray[scriptIndice].status != Running){
                     ScriptsArray[scriptIndice].status := Running
-                    global MGuiIsDirty := true
+                    global MainGuiIsDirty := true
                 }
                 global ScriptsRunning := ScriptsRunning + 1
                 
@@ -319,13 +333,13 @@ UpdateStatus(*) {
             if(ScriptsArray[scriptIndice].status = Running
             and !WinExist(title)){
                 ScriptsArray[scriptIndice].status := Stopped
-                global MGuiIsDirty := true
+                global MainGuiIsDirty := true
             }
 
             if(ScriptsArray[scriptIndice].status = Unknown
                 and !WinExist(title)){
                     ScriptsArray[scriptIndice].status := Stopped
-                    global MGuiIsDirty := true
+                    global MainGuiIsDirty := true
 
 
             }
@@ -336,15 +350,15 @@ UpdateStatus(*) {
 }
 
 UpdateGui(*){
-    LV.ModifyCol(1,, ScriptsRunning)
-    if(MGuiIsDirty = true){
-        LV.Opt("-Redraw")        
+    MainGuiListView.ModifyCol(1,, ScriptsRunning)
+    if(MainGuiIsDirty = true){
+        MainGuiListView.Opt("-Redraw")        
 
         ListScripts
 
         Sleep 1
-        LV.Opt("+Redraw")
-        global MGuiIsDirty := false
+        MainGuiListView.Opt("+Redraw")
+        global MainGuiIsDirty := false
     }
 
 }
@@ -411,8 +425,8 @@ UpdateApps(app){
     
     if(!found){
         AppsArray.Push(app)
-        MGuiAppFltrBtn.Delete()
-        MGuiAppFltrBtn.Add(AppsArray)
+        MainGuiAppFilterButton.Delete()
+        MainGuiAppFilterButton.Add(AppsArray)
     }
 }
 
@@ -428,8 +442,8 @@ UpdateCategories(category){
 
     if(!found){
         CategoriesArray.Push(category)
-        MGuiCtgryFltrBtn.Delete()
-        MGuiCtgryFltrBtn.Add(CategoriesArray)
+        MainGuiCategoryFilterButton.Delete()
+        MainGuiCategoryFilterButton.Add(CategoriesArray)
     }
 }
 
@@ -444,8 +458,8 @@ UpdateSubCategories(category){
 
     if(!found){
         SubCategoriesArray.Push(category)
-        MGuiSCtgryFltrBtn.Delete()
-        MGuiSCtgryFltrBtn.Add(SubCategoriesArray)
+        MainGuiSubCategoryFilterButton.Delete()
+        MainGuiSubCategoryFilterButton.Add(SubCategoriesArray)
     }
 
 }
@@ -461,14 +475,14 @@ UpdateResolutions(resolution){
 
     if(!found){
         ResolutionsArray.Push(resolution)
-        SGuiResFltrBtn.Delete()
-        SGuiResFltrBtn.Add(ResolutionsArray)
+        SettingsGuiResolutionFilterButton.Delete()
+        SettingsGuiResolutionFilterButton.Add(ResolutionsArray)
     }
 
 }
 
 ListScripts(){
-    LV.Delete()
+    MainGuiListView.Delete()
 
     Loop ScriptsArray.Length{
         loopScript := ScriptsArray[A_Index]
@@ -486,7 +500,7 @@ ListScripts(){
                         or loopScript.targetResolution = "Universal"){
 
                         if(loopScript.release = "Stable"){
-                                LV.Add(,
+                                MainGuiListView.Add(,
                                     loopScript.status, 
                                     loopScript.title, 
                                     loopScript.targetApp, 
@@ -501,7 +515,7 @@ ListScripts(){
                             }else{
                                 if(ShowExperimental){
                                     
-                                LV.Add(,
+                                MainGuiListView.Add(,
                                     loopScript.status, 
                                     loopScript.title, 
                                     loopScript.targetApp, 
@@ -518,7 +532,7 @@ ListScripts(){
             }
         }
     }
-    LV.ModifyCol()
+    AdjustColumns
 }
 
 InitializeAHKser(){
@@ -526,7 +540,15 @@ InitializeAHKser(){
     FindScripts
     UpdateStatus
     FilterResolution("","",TargetAppResolution)
-    LV.ModifyCol(2, "Sort")
+    MainGuiListView.ModifyCol(2, "Sort")
+    MainGuiListView.ModifyCol(8, "0")
+}
+
+AdjustColumns(*){
+    Loop MainGuiListView.GetCount("Column"){
+        MainGuiListView.ModifyCol(A_Index, "+AutoHdr")
+    }
+    MainGuiListView.ModifyCol(8, "-AutoHdr 0")
 }
 
 SaveProgramState(*){    ; Saves current program state to drive

@@ -1,3 +1,8 @@
+# v1.0.4
+Fixed column width resizing. Hid path column for the moment. Try to find it!
+Added compiler directives. Not really relevant to the end user.
+Reworked settings dialog.
+
 # V1.0.3
 Rewritten GUI to optimize redraws.
 Filtering and persistence should now work.
