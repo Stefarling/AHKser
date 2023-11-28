@@ -63,10 +63,12 @@ FontHeading             := "s11 Bold"
 ; #ANCHOR Settings - Program
 TargetAppResolution := IniRead(ConfigFile, "TargetAppSettings", RTrim("TargetAppResolution", "`r`n"), "Universal")
 ScriptsFolder := IniRead(ConfigFile, "AHKserSettings", RTrim("ScriptsFolder", "`r`n"), A_ScriptDir "\Scripts")
+FavoritesFolder := IniRead(ConfigFile, "AHKserSettings", RTrim("FavoritesFolder", "`r`n"), A_ScriptDir "\Favorites")
 ShowFavorites := IniRead(ConfigFile, "AHKserSettings", RTrim("ShowFavorites", "`r`n"), true)
 ShowExperimental := IniRead(ConfigFile, "AHKserSettings", RTrim("ShowExperimental", "`r`n"), false)
 
 ScriptsArray := []
+ScriptsMap := Map()
 ScriptsStarted := []
 AppsArray := []
 ResolutionsArray := []
@@ -113,6 +115,8 @@ MainGuiCategoryFilterButton := MainGui.Add("ComboBox", "XP", CategoriesArray)
 MainGui.Add("Text", "Section YS", "Sub-Category:")
 MainGuiSubCategoryFilterButton := MainGui.Add("ComboBox", "XP", SubCategoriesArray)
 
+RescanButton := MainGui.Add("Button","YP","Rescan")
+
 ListViewColumns := [" ", "Script Name", "App", "Branch", "Resolution", "Category", "Sub-Category", "Path"]
 MainGuiListView := MainGui.Add("ListView", "Section XM -multi r10 W450", ListViewColumns)
 
@@ -126,6 +130,8 @@ MainGuiAppFilterButton.OnEvent("Change", FilterApps)
 MainGuiCategoryFilterButton.OnEvent("Change", FilterCategory)
 MainGuiSubCategoryFilterButton.OnEvent("Change", FilterSubCategory)
 MainGui.OnEvent("Close", StopAHKser)
+MainGuiListView.OnEvent("ContextMenu", ShowContextMenu)
+RescanButton.OnEvent("Click", RescanScripts)
 
 ; #ANCHOR Gui - Settings
 SettingsGui := Gui("-Resize +ToolWindow +Owner" MainGui.Hwnd)
@@ -176,6 +182,19 @@ SettingsGui.OnEvent("Escape", CloseSettings)
 ScriptFolderButton.OnEvent("Click", OpenScriptsFolder)
 ScriptSelectButton.OnEvent("Click", SelectScriptsFolder)
 AppFolderButton.OnEvent("Click", OpenAppFolder)
+
+; #ANCHOR Gui - ContextMenu
+ContextMenu := Menu()
+ContextMenu.Add("&Toggle Script", ContextToggleScript)
+ContextMenu.Add()
+ContextMenu.Add("&Edit", ContextEdit)
+ContextMenu.Add("&Properties", ContextProperties)
+ContextMenu.Add("Toggle &Favorite", ContextToggleFavorite)
+ContextMenu.Add()
+ContextMenu.Add("&Delete", ContextDeleteScript)
+ContextMenu.Default := "1&"
+
+; #ANCHOR Gui - ContextMenu - OnEvents
 
 
 ; #ANCHOR Symbols - Status
@@ -292,7 +311,71 @@ GuiResize(thisGui, MinMax, Width, Height)  ; Expand/Shrink ListView in response 
     MainGuiListView.Move(, , Width - 20, Height - 80)
 }
 
-ToggleScriptStatus(ctrl, index) {
+ShowContextMenu(listView, item, isRightClick, x, y){
+    if (item > listView.GetCount()) ; Not sure why the header returns 12 atm #FIXME
+        return
+    if not item  ; For now, only select scripts
+        return ; Do nothing if no item was focused
+    if(listView.GetText(item) = Running){
+        newText := "&Stop Script"
+        ContextMenu.Rename("1&", newText)
+        ContextMenu.Default := newText
+    }else if(listView.GetText(item) = Stopped or Unknown){
+        newText := "&Start Script"
+        ContextMenu.Rename("1&", newText)
+        ContextMenu.Default := newText
+    }
+    ; Show the menu at the provided coordinates, X and Y.  These should be used
+    ; because they provide correct coordinates even if the user pressed the Apps key:
+    ContextMenu.Show(X, Y)
+
+}
+
+ContextEdit(*){
+    ; #TODO Add editor
+    MsgBox "Not implemented yet. Sorry!"
+
+}
+
+ContextDeleteScript(null, *){
+    focusedRowNumber := MainGuiListView.GetNext(0, "F")
+    if not focusedRowNumber ; No row is focused
+        return
+    fileName := MainGuiListView.GetText(focusedRowNumber, 8)
+    msgString := "Really delete " fileName "?"
+    choice := MsgBox( msgString, "Confirm delete?", "Owner" MainGui.Hwnd " YesNo" )
+    if(choice = "Yes"){        
+                if (WinExist(fileName)) {
+                    WinClose
+                }
+                FileRecycle fileName
+                FindScripts
+                UpdateStatus
+    }
+}
+
+ContextProperties(*){
+    ; #TODO Add Properties dialog
+    MsgBox "Not implemented yet. Sorry!"
+
+}
+
+ContextToggleFavorite(*){
+    ; #TODO Add favorites
+    MsgBox "Not implemented yet. Sorry!"
+
+}
+
+ContextToggleScript(null, *){
+    focusedRowNumber := MainGuiListView.GetNext(0, "F")
+    if not focusedRowNumber ; No row is focused
+        return
+    fileName := MainGuiListView.GetText(focusedRowNumber, 2)
+
+    ToggleScriptStatus(, focusedRowNumber)
+}
+
+ToggleScriptStatus(ctrl?, index := 0) {
 
     if (index > 0) {
 
@@ -422,7 +505,13 @@ UpdateGui(*) {
 
 }
 
+RescanScripts(*){
+    ; #TODO Implement automatic refresh on folder modified.
+    FindScripts
+}
+
 FindScripts() {
+    RescanButton.Enabled := false
 
     
     global ScriptsArray := []
@@ -472,6 +561,8 @@ FindScripts() {
         }
         ScriptsArray.Push(cls)
     }
+    
+    RescanButton.Enabled := true
 }
 
 UpdateApps(app) {

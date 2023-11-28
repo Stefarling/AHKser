@@ -1,4 +1,6 @@
 # v1.0.4
+Added rescan button for finding those pesky scripts again.
+Added context menu to listview.
 Added ability to change scripts folder within the apps folders.
 Removed compiler files. (And my .gitignore)
 Fixed column width resizing. Hid path column for the moment. Try to find it!
