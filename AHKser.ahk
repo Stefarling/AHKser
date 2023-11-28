@@ -88,7 +88,6 @@ TMenu.Add("Open", OpenGui)
 TMenu.Add("Open", OpenSettings)
 TMenu.Add("Help", OpenHelp)
 TMenu.Add()
-TMenu.Add()
 TMenu.Add("Exit AHKser", StopAHKser)
 TMenu.Default := "Open"
 
