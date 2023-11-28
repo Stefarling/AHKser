@@ -67,13 +67,14 @@ FavoritesFolder := IniRead(ConfigFile, "AHKserSettings", RTrim("FavoritesFolder"
 ShowFavorites := IniRead(ConfigFile, "AHKserSettings", RTrim("ShowFavorites", "`r`n"), true)
 ShowExperimental := IniRead(ConfigFile, "AHKserSettings", RTrim("ShowExperimental", "`r`n"), false)
 
+ScriptsArray := []
 ScriptsMap := Map()
 ScriptsStarted := []
 AppsArray := []
 ResolutionsArray := []
 CategoriesArray := []
 SubCategoriesArray := []
-FavoriteScriptsMap := Map()
+FavoriteScriptsArray := []
 ScriptsRunning := 0
 TargetAppFilter := ""
 TargetCategoryFilter := ""
@@ -513,7 +514,7 @@ FindScripts() {
     RescanButton.Enabled := false
 
     
-    ScriptsMap.Clear()
+    global ScriptsArray := []
     Loop Files, ScriptsFolder "\*ahk", "R"
     {
         fileText := FileRead(A_LoopFileFullPath)
@@ -558,7 +559,7 @@ FindScripts() {
             cls.status := Unknown
             cls.reference := &cls
         }
-        ScriptsMap.Set(fileText, cls)
+        ScriptsArray.Push(cls)
     }
     
     RescanButton.Enabled := true
@@ -635,8 +636,8 @@ UpdateResolutions(resolution) {
 ListScripts() {
     MainGuiListView.Delete()
 
-    Loop ScriptsMap.Length {
-        loopScript := ScriptsMap[A_Index]
+    Loop ScriptsArray.Length {
+        loopScript := ScriptsArray[A_Index]
 
         if (TargetAppFilter = loopScript.targetApp or TargetAppFilter = "") {
 
