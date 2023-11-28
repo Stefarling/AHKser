@@ -43,7 +43,7 @@ ProductVersion := "1.0.10.0"
 TraySetIcon(A_ScriptDir "\assets\appIcon.ico")
 ;@Ahk2Exe-IgnoreEnd
 
-; #ANCHOR - Settings - Program
+; #ANCHOR Settings - Program
 Persistent
 SetWorkingDir A_ScriptDir
 OnExit SaveProgramState
@@ -54,6 +54,10 @@ ConfigFile := "AHKserSettings.ini"
 Debug := true
 DebugLog := "debug.log"
 ShortTime := "HH:mm:ss"
+
+; #ANCHOR Text Formatting
+FontText                := "s10 Norm"
+FontHeading             := "s11 Bold"
 
 
 ; #ANCHOR Settings - Program
@@ -97,7 +101,7 @@ Bmenu.Add("&File", FMenu)
 BMenu.Add("&Settings", OpenSettings)
 BMenu.Add("&Help", OpenHelp)
 
-; #ANCHOR - GUI - Main
+; #ANCHOR GUI - Main
 MainGui := Gui("-Parent +Resize +MinSize455x150 +OwnDialogs")
 MainGuiIsDirty := true
 MainGui.Title := ProgramTitle
@@ -116,7 +120,7 @@ MainGuiListView := MainGui.Add("ListView", "Section XM -multi r10 W450", ListVie
 StsBar := MainGui.Add("StatusBar", ,)
 
 
-; #ANCHOR - GUI - Main - OnEvent
+; #ANCHOR GUI - Main - OnEvent
 MainGuiListView.OnEvent("DoubleClick", ToggleScriptStatus)
 MainGui.OnEvent("Size", GuiResize)
 MainGuiAppFilterButton.OnEvent("Change", FilterApps)
@@ -124,35 +128,64 @@ MainGuiCategoryFilterButton.OnEvent("Change", FilterCategory)
 MainGuiSubCategoryFilterButton.OnEvent("Change", FilterSubCategory)
 MainGui.OnEvent("Close", StopAHKser)
 
-; #ANCHOR - Gui - Settings
+; #ANCHOR Gui - Settings
 SettingsGui := Gui("-Resize +ToolWindow +Owner" MainGui.Hwnd)
-SettingsGuiFavoriteCheckbox := SettingsGui.Add("CheckBox", "vFavoriteShow", "Show favorite scripts.")
-SettingsGuiFavoriteCheckbox.Visible := false
-SettingsGuiExperimentalCheckbox := SettingsGui.Add("CheckBox", "vExperimentalShow", "Show experimental scripts.")
+SettingsGuiIsDirty := false
 
-SettingsGui.Add("Text", "XP YP+20", "Resolution")
-SettingsGuiResolutionFilterButton := SettingsGui.Add("ComboBox", "XP+0 YP+15", ResolutionsArray)
+textBlock :="
+(
+    Preferred Resolution:
+)"
+SettingsGui.Add("Text", "Section", textBlock)
+SettingsGuiResolutionFilterButton := SettingsGui.Add("ComboBox", "XP", ResolutionsArray)
 SettingsGuiResolutionFilterButton.Text := TargetAppResolution
 
-ScriptFolderButton := SettingsGui.Add("Button", "Section r2 w60", "Scripts`nFolder")
-AppFolderButton := SettingsGui.Add("Button", "YS XP+65 r2 w60", "App`nFolder")
 
-SettingsGui.Add("Text", "Section XS YS+60", "Press Escape to close this window.")
+SettingsGuiFavoriteCheckbox := SettingsGui.Add("CheckBox", "XS+0 YP+5 vFavoriteShow", "Show favorite scripts.")
+SettingsGuiFavoriteCheckbox.Visible := false
 
-; #ANCHOR - Gui - Settings - OnEvents
+textBlock :="
+(
+    Show Experimental Scripts?
+    (Using experimental scripts can cause unexpected things to happen.)
+)"
+SettingsGuiExperimentalCheckbox := SettingsGui.Add("CheckBox", "XS+0 vExperimentalShow", textBlock)
+
+textBlock :="
+(
+    Scripts: 
+)"
+SettingsGuiScriptLocationText := SettingsGui.Add("Text","Section vScriptLocation", textBlock . ScriptsFolder )
+ScriptFolderButton := SettingsGui.Add("Button", "XS r1 w60", "Browse")
+ScriptSelectButton := SettingsGui.Add("Button", "YP r1 w60", "Change...")
+
+textBlock :="
+(
+    App: 
+)"
+SettingsGui.Add("Text","Section XS",textBlock . A_ScriptDir )
+AppFolderButton := SettingsGui.Add("Button", "r1 w60", "Browse...")
+
+
+
+
+SettingsGui.Add("Text", "Section XS YP+60", "Press Escape to close this window.")
+
+; #ANCHOR Gui - Settings - OnEvents
 SettingsGui.OnEvent("Close", CloseSettings)
 SettingsGui.OnEvent("Escape", CloseSettings)
 ScriptFolderButton.OnEvent("Click", OpenScriptsFolder)
+ScriptSelectButton.OnEvent("Click", SelectScriptsFolder)
 AppFolderButton.OnEvent("Click", OpenAppFolder)
 
 
-; #ANCHOR - Symbols - Status
+; #ANCHOR Symbols - Status
 Running := "✓"
 Stopped := "X"
 Unknown := "?"
 
 
-; #ANCHOR - Script Class
+; #ANCHOR Script Class
 class Script {
     title := unknown
     version := unknown
@@ -170,13 +203,29 @@ class Script {
 }
 
 
-; #ANCHOR - Functions
+; #ANCHOR Functions
 OpenScriptsFolder(*) {
     try {
-        DirCreate("Scripts\Universal")
+        DirCreate(ScriptsFolder)
         Run "explore " ScriptsFolder
     } catch {
         MsgBox "Couldn't create " ScriptsFolder
+    }
+}
+
+SelectScriptsFolder(*) {
+    try {
+        global ScriptsFolder := DirSelect( A_ScriptDir, 3, "Select Scripts location...")
+        FindScripts
+        local textBlock :="
+        (
+            Scripts: 
+        )"
+        SettingsGuiScriptLocationText.Text := textBlock "" ScriptsFolder 
+        global MainGuiIsDirty := true
+        global SettingsGuiIsDirty := true
+    } catch {
+        MsgBox "Couldn't do what you wanted. Sorry!"
     }
 }
 
@@ -368,10 +417,16 @@ UpdateGui(*) {
         global MainGuiIsDirty := false
     }
 
+    if (SettingsGuiIsDirty = true){
+        global SettingsGuiIsDirty := false
+    }
+
 }
 
 FindScripts() {
 
+    
+    global ScriptsArray := []
     Loop Files, ScriptsFolder "\*ahk", "R"
     {
         fileText := FileRead(A_LoopFileFullPath)
