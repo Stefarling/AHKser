@@ -101,7 +101,8 @@ BMenu.Add("&Settings", OpenSettings)
 BMenu.Add("&Help", OpenHelp)
 
 ; #ANCHOR GUI - Main
-MainGui := Gui("-Parent +Resize +MinSize455x150 +OwnDialogs")
+MainGui := Gui("-Parent +Resize +MinSize455x150")
+MainGui.Opt("+OwnDialogs")
 MainGuiIsDirty := true
 MainGui.Title := ProgramTitle
 MainGui.MenuBar := BMenu
@@ -133,7 +134,7 @@ RescanButton.OnEvent("Click", RescanScripts)
 
 
 ; #ANCHOR Gui - Settings
-SettingsGui := Gui("-Resize +ToolWindow +Owner")
+SettingsGui := Gui("-Resize +Owner")
 SettingsGui.Title := "Settings"
 SettingsGuiIsDirty := false
 
@@ -430,7 +431,7 @@ OpenHelp(*) {
 
 
 OpenSettings(*) {
-    MainGui.Opt("+Disabled")
+    MainGui.Opt("+OwnDialogs")
     SettingsGuiResolutionFilterButton.Text := TargetAppResolution
     SettingsGuiExperimentalCheckbox.value := ShowExperimental
     SettingsGuiToggleOSDCheckbox.value := ShowOSD
@@ -452,7 +453,10 @@ OpenSettings(*) {
     SettingsGuiToggleOSDCheckbox.OnEvent("Click", ToggleOSD)
     SettingsGuiToggleOSDAnchorButton.OnEvent("Click", ToggleOSDAnchor)
 
-    SettingsGui.Show
+    x := 0
+    y := 0
+    WinGetPos(&x, &y,,,MainGui)
+    SettingsGui.Show("X" x " Y" y)
 }
 
 ToggleOSD(*){
@@ -497,7 +501,6 @@ UpdateOSD(*){
 }
 
 CloseSettings(thisgui) {
-    MainGui.Opt("-Disabled")
     SettingsGui.Hide
 }
 
@@ -797,6 +800,7 @@ SaveProgramState(*) {    ; Saves current program state to drive
 
 HideAHKser(*){
     MainGui.Hide
+    SettingsGui.Hide
     TrayTip("AHKser minimized to tray.",,"Mute")
 }
 
