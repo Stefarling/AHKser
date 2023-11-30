@@ -461,7 +461,7 @@ ToggleOSD(*){
         OSD.Hide
     }else{
         OSD.Show("X" OSDx " Y" OSDy "NoActivate")
-        global ShowOSD := false
+        global ShowOSD := true
     }
 }
 
