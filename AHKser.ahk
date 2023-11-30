@@ -1,11 +1,3 @@
-/************************************************************************
- * @description AHKser Script Manager
- * @file AHKser.ahk
- * @author Stefan Darling
- * @date 2023/11/27
- * @version 2.0
- ***********************************************************************/
-
 #Requires AutoHotkey v2.0
 #SingleInstance Force
 #Warn
@@ -23,7 +15,7 @@ Description := "AHKser Script Manager"
 ;@Ahk2Exe-Let U_description = %A_PriorLine~U)^(Description \:\= \")(.+?)+(\")$~$2%
 ;@Ahk2Exe-SetDescription %U_description%
 
-FileVersion := "2.0"
+FileVersion := "2.1"
 ;@Ahk2Exe-Let U_fileVersion = %A_PriorLine~U)^(FileVersion \:\= \")(.+?)+(\")$~$2%
 ;@Ahk2Exe-SetFileVersion %U_fileVersion%
 
@@ -48,6 +40,8 @@ Persistent
 SetWorkingDir A_ScriptDir
 OnExit SaveProgramState
 
+F11::ListVars
+
 ; #ANCHOR Variables - Program
 ProgramTitle := ProductName
 ConfigFile := "AHKserSettings.ini"
@@ -63,12 +57,17 @@ FontHeading             := "s11 Bold"
 ; #ANCHOR Settings - Program
 TargetAppResolution := IniRead(ConfigFile, "TargetAppSettings", RTrim("TargetAppResolution", "`r`n"), "Universal")
 ScriptsFolder := IniRead(ConfigFile, "AHKserSettings", RTrim("ScriptsFolder", "`r`n"), A_ScriptDir "\Scripts")
-FavoritesFolder := IniRead(ConfigFile, "AHKserSettings", RTrim("FavoritesFolder", "`r`n"), A_ScriptDir "\Favorites")
 ShowFavorites := IniRead(ConfigFile, "AHKserSettings", RTrim("ShowFavorites", "`r`n"), true)
 ShowExperimental := IniRead(ConfigFile, "AHKserSettings", RTrim("ShowExperimental", "`r`n"), false)
+ShowOSD := IniRead(ConfigFile, "AHKserSettings", RTrim("ShowOSD", "`r`n"), true)
+OSDx := IniRead(ConfigFile, "AHKserSettings", RTrim("OSDx", "`r`n"), 250)
+OSDy := IniRead(ConfigFile, "AHKserSettings", RTrim("OSDy", "`r`n"), 250)
+MainGuiX := IniRead(ConfigFile, "AHKserSettings", RTrim("MainGuiX", "`r`n"), 250)
+MainGuiY := IniRead(ConfigFile, "AHKserSettings", RTrim("MainGuiY", "`r`n"), 250)
+FavoritesFolder := A_ScriptDir "\Favorites"
+ShowRunningScriptsReminderAnchor := false
 
 ScriptsArray := []
-ScriptsMap := Map()
 ScriptsStarted := []
 AppsArray := []
 ResolutionsArray := []
@@ -87,7 +86,6 @@ A_IconTip := ProgramTitle
 TMenu := A_TrayMenu
 TMenu.Delete()
 TMenu.Add("Open", OpenGui)
-TMenu.Add("Open", OpenSettings)
 TMenu.Add("Help", OpenHelp)
 TMenu.Add()
 TMenu.Add("Exit AHKser", StopAHKser)
@@ -129,12 +127,14 @@ MainGui.OnEvent("Size", GuiResize)
 MainGuiAppFilterButton.OnEvent("Change", FilterApps)
 MainGuiCategoryFilterButton.OnEvent("Change", FilterCategory)
 MainGuiSubCategoryFilterButton.OnEvent("Change", FilterSubCategory)
-MainGui.OnEvent("Close", StopAHKser)
+MainGui.OnEvent("Close", HideAHKser)
 MainGuiListView.OnEvent("ContextMenu", ShowContextMenu)
 RescanButton.OnEvent("Click", RescanScripts)
 
+
 ; #ANCHOR Gui - Settings
-SettingsGui := Gui("-Resize +ToolWindow +Owner" MainGui.Hwnd)
+SettingsGui := Gui("-Resize +ToolWindow +Owner")
+SettingsGui.Title := "Settings"
 SettingsGuiIsDirty := false
 
 textBlock :="
@@ -146,15 +146,19 @@ SettingsGuiResolutionFilterButton := SettingsGui.Add("ComboBox", "XP", Resolutio
 SettingsGuiResolutionFilterButton.Text := TargetAppResolution
 
 
-SettingsGuiFavoriteCheckbox := SettingsGui.Add("CheckBox", "XS+0 YP+5 vFavoriteShow", "Show favorite scripts.")
-SettingsGuiFavoriteCheckbox.Visible := false
+SettingsGuiFavoriteCheckbox := SettingsGui.Add("CheckBox", "XS+0 vFavoriteShow", "Show favorite scripts.")
 
 textBlock :="
 (
     Show Experimental Scripts?
     (Using experimental scripts can cause unexpected things to happen.)
 )"
-SettingsGuiExperimentalCheckbox := SettingsGui.Add("CheckBox", "XS+0 vExperimentalShow", textBlock)
+SettingsGuiExperimentalCheckbox := SettingsGui.Add("CheckBox", "XS vExperimentalShow", textBlock)
+
+
+
+SettingsGuiToggleOSDCheckbox   := SettingsGui.Add("Checkbox","XP", "Toggle OSD Script Reminder")
+SettingsGuiToggleOSDAnchorButton := SettingsGui.Add("Button", "XP", "Show OSD Anchor")
 
 textBlock :="
 (
@@ -171,17 +175,8 @@ textBlock :="
 SettingsGui.Add("Text","Section XS",textBlock . A_ScriptDir )
 AppFolderButton := SettingsGui.Add("Button", "r1 w60", "Browse...")
 
-
-
-
 SettingsGui.Add("Text", "Section XS YP+60", "Press Escape to close this window.")
 
-; #ANCHOR Gui - Settings - OnEvents
-SettingsGui.OnEvent("Close", CloseSettings)
-SettingsGui.OnEvent("Escape", CloseSettings)
-ScriptFolderButton.OnEvent("Click", OpenScriptsFolder)
-ScriptSelectButton.OnEvent("Click", SelectScriptsFolder)
-AppFolderButton.OnEvent("Click", OpenAppFolder)
 
 ; #ANCHOR Gui - ContextMenu
 ContextMenu := Menu()
@@ -196,6 +191,25 @@ ContextMenu.Default := "1&"
 
 ; #ANCHOR Gui - ContextMenu - OnEvents
 
+
+; #ANCHOR OSD
+OSD := Gui(OSDx " " OSDy)
+OSD.Title := "Anchor"
+OSD.MarginX := 0
+OSD.MarginY := 0
+OSD.BackColor := "000000"
+OSD.SetFont("s36 bold")
+OSD.Add("Picture", "Section XM-0 YM-0 w64 h64 BackgroundTrans",  A_InitialWorkingDir "\assets\appIcon.ico")
+OSDtext := OSD.Add("Text","XP+22 YP+18 BackgroundTrans cff0000",ScriptsRunning)
+WinSetTransColor(OSD.BackColor " 225", OSD)
+OSD.Opt("+AlwaysOnTop -Resize +ToolWindow -Caption -SysMenu +E0x20")
+OSD.Opt("+Disabled")
+if(ShowOSD = true){
+OSD.Show( "X" OSDx " Y" OSDY " NoActivate")
+}
+
+; #ANCHOR OSD - OnEvent
+OSD.OnEvent("Escape", LockOSD)
 
 ; #ANCHOR Symbols - Status
 Running := "✓"
@@ -343,7 +357,7 @@ ContextDeleteScript(null, *){
         return
     fileName := MainGuiListView.GetText(focusedRowNumber, 8)
     msgString := "Really delete " fileName "?"
-    choice := MsgBox( msgString, "Confirm delete?", "Owner" MainGui.Hwnd " YesNo" )
+    choice := MsgBox( msgString, "Confirm delete?", "+Owner +YesNo" )
     if(choice = "Yes"){        
                 if (WinExist(fileName)) {
                     WinClose
@@ -406,7 +420,7 @@ ToggleScriptStatus(ctrl?, index := 0) {
     }
 }
 
-OpenHelp(*) {            ; Saves current program state to drive
+OpenHelp(*) {
     try {
         Run "https://github.com/Stefarling/AHKser/wiki"
     } catch {
@@ -414,27 +428,77 @@ OpenHelp(*) {            ; Saves current program state to drive
     }
 }
 
-OpenGui(*) {             ; Saves current program state to drive
-    MainGui.Show()
-}
 
-OpenSettings(*) {        ; Saves current program state to drive
+OpenSettings(*) {
     MainGui.Opt("+Disabled")
     SettingsGuiResolutionFilterButton.Text := TargetAppResolution
     SettingsGuiExperimentalCheckbox.value := ShowExperimental
+    SettingsGuiToggleOSDCheckbox.value := ShowOSD
 
+    if(ShowRunningScriptsReminderAnchor = true){
+        SettingsGuiToggleOSDAnchorButton.Text := "Lock OSD Anchor"
+    }else{
+        SettingsGuiToggleOSDAnchorButton.Text := "Unlock OSD Anchor"
+    }
+
+    SettingsGui.OnEvent("Close", CloseSettings)
+    SettingsGui.OnEvent("Escape", CloseSettings)
+    ScriptFolderButton.OnEvent("Click", OpenScriptsFolder)
+    ScriptSelectButton.OnEvent("Click", SelectScriptsFolder)
+    AppFolderButton.OnEvent("Click", OpenAppFolder)
     SettingsGuiResolutionFilterButton.OnEvent("Change", FilterResolution)
     SettingsGuiExperimentalCheckbox.OnEvent("Click", UpdateShowExperimental)
     SettingsGuiFavoriteCheckbox.OnEvent("Click", UpdateShowFavorites)
+    SettingsGuiToggleOSDCheckbox.OnEvent("Click", ToggleOSD)
+    SettingsGuiToggleOSDAnchorButton.OnEvent("Click", ToggleOSDAnchor)
 
     SettingsGui.Show
+}
+
+ToggleOSD(*){
+    if(ShowOSD = true){
+        global ShowOSD := false
+        OSD.Hide
+    }else{
+        OSD.Show("X" OSDx " Y" OSDy "NoActivate")
+        global ShowOSD := false
+    }
+}
+
+LockOSD(*){
+    if(ShowRunningScriptsReminderAnchor = true){
+        OSD.Opt("+Disabled -Caption +E0x20")    
+        SettingsGuiToggleOSDAnchorButton.Text := "Unlock OSD Anchor"
+        global ShowRunningScriptsReminderAnchor := false
+        global SettingsGuiIsDirty := true
+    }
+}
+
+ToggleOSDAnchor(*){
+    if(ShowRunningScriptsReminderAnchor = true){
+        OSD.Opt("+Disabled -Caption +E0x20")    
+        SettingsGuiToggleOSDAnchorButton.Text := "Unlock OSD Anchor"
+        global ShowRunningScriptsReminderAnchor := false
+        global SettingsGuiIsDirty := true
+    }else{
+        OSD.Opt("+Caption -Disabled -E0x20 +MinSize100x100")
+        x := 0
+        y := 0
+        WinGetPos(&x, &y,,,OSD)
+        OSD.Move(,, 80, 100)
+        SettingsGuiToggleOSDAnchorButton.Text := "Lock OSD Anchor"
+        global ShowRunningScriptsReminderAnchor := true
+        global SettingsGuiIsDirty := true
+    }
+}
+
+UpdateOSD(*){
+    OSDtext.Text := ScriptsRunning
 }
 
 CloseSettings(thisgui) {
     MainGui.Opt("-Disabled")
     SettingsGui.Hide
-    SaveProgramState
-    return true
 }
 
 UpdateShowExperimental(ctrl, *) {
@@ -454,6 +518,7 @@ UpdateShowFavorites(ctrl, *) {
 UpdateStatus(*) {
     DetectHiddenWindows "On"
     DetectHiddenText "On"
+    oldScriptsRunning := ScriptsRunning
     global ScriptsRunning := 0
 
     Loop ScriptsArray.Length {
@@ -482,6 +547,9 @@ UpdateStatus(*) {
 
         }
     }
+    if(oldScriptsRunning != ScriptsRunning){
+        UpdateOSD
+    }
     UpdateGui
     DetectHiddenText "Off"
     DetectHiddenWindows "Off"
@@ -504,6 +572,7 @@ UpdateGui(*) {
     }
 
 }
+
 
 RescanScripts(*){
     ; #TODO Implement automatic refresh on folder modified.
@@ -704,6 +773,21 @@ AdjustColumns(*) {
 }
 
 SaveProgramState(*) {    ; Saves current program state to drive
+
+    x := 0
+    y := 0
+    w := 0
+    h := 0
+    WinGetPos &x, &y, &w, &h, OSD
+    IniWrite(RTrim(x, "`r`n"), ConfigFile, "AHKserSettings", "OSDx")
+    IniWrite(RTrim(y, "`r`n"), ConfigFile, "AHKserSettings", "OSDy")
+    IniWrite(RTrim(ShowOSD, "`r`n"), ConfigFile, "AHKserSettings", "ShowOSD")
+
+    WinGetPos &x, &y, &w, &h, MainGui
+    IniWrite(RTrim(x, "`r`n"), ConfigFile, "AHKserSettings", "MainGuiX")
+    IniWrite(RTrim(y, "`r`n"), ConfigFile, "AHKserSettings", "MainGuiY")
+
+
     IniWrite(RTrim(TargetAppResolution, "`r`n"), ConfigFile, "TargetAppSettings", "TargetAppResolution")
     IniWrite(RTrim(ShowFavorites, "`r`n"), ConfigFile, "AHKserSettings", "ShowFavorites")
     IniWrite(RTrim(ShowExperimental, "`r`n"), ConfigFile, "AHKserSettings", "ShowExperimental")
@@ -711,8 +795,17 @@ SaveProgramState(*) {    ; Saves current program state to drive
 
 }
 
+HideAHKser(*){
+    MainGui.Hide
+    TrayTip("AHKser minimized to tray.",,"Mute")
+}
+
+OpenGui(*) {
+
+    MainGui.Show("X" MainGuiX " Y" MainGuiY)
+}
+
 StopAHKser(*) {
-    SaveProgramState
     ExitApp(0)
 }
 

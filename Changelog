@@ -1,4 +1,5 @@
 # v1.0.4
+Added optional running scripts reminder.
 Added rescan button for finding those pesky scripts again.
 Added context menu to listview.
 Added ability to change scripts folder within the apps folders.
