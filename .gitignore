@@ -1,0 +1,7 @@
+/AHKser
+/Scripts
+/Compiled
+*.zip
+AHKserSettings*
+/release
+/AutoHotkey
