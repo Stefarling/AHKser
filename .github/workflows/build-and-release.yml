@@ -1,0 +1,111 @@
+name: Build and Package Edge
+
+on:
+  push:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Setup Environment 1#3 - Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          repository: "Stefarling/AHKser"
+          ref: edge
+
+      - name: Setup Environment 2#2 - Create Folder Tree
+        shell: pwsh
+        working-directory: ${{ github.workspace }}
+        run: |
+
+          # Check if the directory exists
+          if (Test-Path -Path .\compiled\assembled) {
+              # If it exists, remove its contents
+              Remove-Item -Path .\compiled\assembled\* -Recurse -Force
+          }
+          else {
+              # If it doesn't exist, create it
+              New-Item -ItemType Directory -Path .\compiled\assembled -Force
+          }
+          # Check if the directory exists
+          if (Test-Path -Path .\release) {
+              # If it exists, remove its contents
+              Remove-Item -Path .\release\* -Recurse -Force
+          }
+          else {
+              # If it doesn't exist, create it
+              New-Item -ItemType Directory -Path .\release -Force
+          }
+          # Check if the directory exists
+          if (Test-Path -Path .\compiled\assembled\Scripts) {
+              # If it exists, remove its contents
+              Remove-Item -Path .\compiled\assembled\Scripts\* -Recurse -Force
+          }
+          else {
+              # If it doesn't exist, create it
+              New-Item -ItemType Directory -Path .\compiled\assembled\Scripts -Force
+          }
+          # Check if the directory exists
+          if (Test-Path -Path .\compiled\assembled\assets) {
+              # If it exists, remove its contents
+              Remove-Item -Path .\compiled\assembled\assets\* -Recurse -Force
+          }
+          else {
+              # If it doesn't exist, create it
+              New-Item -ItemType Directory -Path .\compiled\assembled\assets -Force
+          }
+
+      - name: Compile Script
+        shell: pwsh
+        working-directory: ${{ github.workspace }}
+        run: |
+          # Compile your AutoHotKey script
+          & ".\AutoHotkey\Compiler\Ahk2Exe.exe" /in .\AHKser.ahk /out .\compiled\AHKser.exe /silent
+
+      - name: Prepare Package 1#2 - Bundle up files
+        shell: pwsh
+        working-directory: ${{ github.workspace }}
+        run: |
+          # Copy compiled files
+          Copy-Item .\compiled\*.exe .\compiled\assembled\
+          Copy-Item .\AHKser.ahk .\compiled\assembled\ -Recurse -Force
+          Copy-Item .\LICENSE* .\compiled\assembled\ -Recurse -Force
+          Copy-Item .\assets\appIcon.ico .\compiled\assembled\assets\appIcon.ico -Recurse -Force
+          Copy-Item .\assets\Scripts\* .\compiled\assembled\Scripts\ -Recurse -Force
+
+      - name: Prepare Package 2#2 - Zip up all the files
+        run: |
+
+          # Set folder path
+          $folderPath = "$env:GITHUB_WORKSPACE\compiled\assembled"
+
+          # Get the name of the first file in the "assembled" folder that matches the pattern "AHKser*"
+          $baseFileName = Get-ChildItem -Path "$folderPath\AHKser.exe" | Select-Object -ExpandProperty BaseName
+
+          # Change directory
+          Set-Location -Path $folderPath -ErrorAction SilentlyContinue
+          if ($?) {
+            # Create ZIP file
+            Compress-Archive -Path * -DestinationPath "$env:GITHUB_WORKSPACE\release\$baseFileName.zip" -Force
+            Write-Host "Zip file $baseFileName.zip has been created in '$env:GITHUB_WORKSPACE\release'"
+          } else {
+            Write-Host "Error: Could not change to the specified directory: $folderPath"
+            exit 1
+          }
+        shell: pwsh
+
+      - name: Create Release
+        shell: pwsh
+        working-directory: ${{ github.workspace }}
+        run: |
+          # Add commands to create a GitHub release with the combined version
+          $product_version = (Get-Content -Path .\AHKser.ahk | Select-String -Pattern '^ProductVersion := ' -Raw) -replace '^ProductVersion := "(.*)"', '$1'
+          $file_version = (Get-Content -Path .\AHKser.ahk | Select-String -Pattern '^FileVersion := ' -Raw) -replace '^FileVersion := "(.*)"', '$1'
+
+          # Combine ProductVersion and FileVersion into a single version string
+          $combined_version = "$product_version-$file_version"
+
+          # Create the GitHub release
+          gh release create "v$combined_version" .\release\AHKser.zip -t "v$combined_version" --prerelease --draft
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
