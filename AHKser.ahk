@@ -17,10 +17,6 @@ Description := "AHKser Script Manager"
 ;@Ahk2Exe-Let U_description = %A_PriorLine~U)^(Description \:\= \")(.+?)+(\")$~$2%
 ;@Ahk2Exe-SetDescription %U_description%
 
-FileVersion := "34"
-;@Ahk2Exe-Let U_fileVersion = %A_PriorLine~U)^(FileVersion \:\= \")(.+?)+(\")$~$2%
-;@Ahk2Exe-SetFileVersion %U_fileVersion%
-
 ProductName := "AHKser Script Manager"
 ;@Ahk2Exe-Let U_productName = %A_PriorLine~U)^(ProductName \:\= \")(.+?)+(\")$~$2%
 ;@Ahk2Exe-SetName %U_productName%
@@ -28,6 +24,10 @@ ProductName := "AHKser Script Manager"
 ProductVersion := "1.1.0"
 ;@Ahk2Exe-Let U_productVersion = %A_PriorLine~U)^(ProductVersion \:\= \")(.+?)+(\")$~$2%
 ;@Ahk2Exe-SetProductVersion %U_productVersion%
+
+FileVersion := "35"
+;@Ahk2Exe-Let U_fileVersion = %A_PriorLine~U)^(FileVersion \:\= \")(.+?)+(\")$~$2%
+;@Ahk2Exe-SetFileVersion %U_fileVersion%
 
 ;@Ahk2Exe-SetMainIcon assets\appIcon.ico
 ;@Ahk2Exe-Base ..\v2\AutoHotkey64.exe, compiled\
@@ -134,6 +134,7 @@ MainGuiSubCategoryFilterButton.OnEvent("Change", FilterSubCategory)
 MainGui.OnEvent("Close", HideAHKser)
 MainGuiListView.OnEvent("ContextMenu", ShowContextMenu)
 RescanButton.OnEvent("Click", RescanScripts)
+MainGui.OnEvent("Escape", HideAHKser)
 
 
 ; #ANCHOR Gui - Settings
@@ -219,6 +220,13 @@ OSD.OnEvent("Escape", LockOSD)
 ; #ANCHOR AboutGui
 AboutGui := Gui("+ToolWindow -Resize")
 AboutGui.Title := "About - " ProgramTitle
+AboutTitle := AboutGui.Add("Text","Section ",ProgramTitle)
+AboutPVersion := AboutGui.Add("Text","XS YP+15","Version: " ProductVersion "." FileVersion)
+LicenseLink := AboutGui.Add("Link","XS YP+15",'<a href="' CopyrightUrl '">' Copyright '</a>')
+AboutLink := AboutGui.Add("Link","XS YP+15",'<a href="https://github.com/Stefarling/AHKser">AHKser Source Code</a>')
+AutoHotkeyLink := AboutGui.Add("Link","XS YP+15",'<a href="https://www.autohotkey.com/">AutoHotkey</a>')
+
+AboutPicture := AboutGui.Add("Picture", "Section w64 h64 YS BackgroundTrans",  A_InitialWorkingDir "\assets\appIcon.ico")
 
 ; #ANCHOR Symbols - Status
 Running := "✓"
@@ -438,19 +446,15 @@ OpenHelp(*) {
 }
 
 OpenAbout(*){
+    MainGui.Opt("+OwnDialogs")
     x := 0
     y := 0
     WinGetPos &x, &y,,,MainGui
 
-    aboutTitle := AboutGui.Add("Text","Section ",ProgramTitle)
-    aboutPVersion := AboutGui.Add("Text","XS YP+15","Version: " ProductVersion "." FileVersion)
-    licenseLink := AboutGui.Add("Link","XS YP+15",'<a href="' CopyrightUrl '">' Copyright '</a>')
-    aboutLink := AboutGui.Add("Link","XS YP+15",'<a href="https://github.com/Stefarling/AHKser">AHKser Source Code</a>')
-    autoHotkeyLink := AboutGui.Add("Link","XS YP+15",'<a href="https://www.autohotkey.com/">AutoHotkey</a>')
-    
-    aboutPicture := AboutGui.Add("Picture", "Section w64 h64 YS BackgroundTrans",  A_InitialWorkingDir "\assets\appIcon.ico")
-
     AboutGui.Show("X" x " Y" y)
+
+    AboutGui.OnEvent("Escape", HideAbout)
+
 }
 
 
@@ -466,8 +470,8 @@ OpenSettings(*) {
         SettingsGuiToggleOSDAnchorButton.Text := "Unlock OSD Anchor"
     }
 
-    SettingsGui.OnEvent("Close", CloseSettings)
-    SettingsGui.OnEvent("Escape", CloseSettings)
+    SettingsGui.OnEvent("Close", HideSettings)
+    SettingsGui.OnEvent("Escape", HideSettings)
     ScriptFolderButton.OnEvent("Click", OpenScriptsFolder)
     ScriptSelectButton.OnEvent("Click", SelectScriptsFolder)
     AppFolderButton.OnEvent("Click", OpenAppFolder)
@@ -524,8 +528,12 @@ UpdateOSD(*){
     OSDtext.Text := ScriptsRunning
 }
 
-CloseSettings(thisgui) {
+HideSettings(thisgui) {
     SettingsGui.Hide
+}
+
+HideAbout(thisgui){
+    AboutGui.Hide
 }
 
 UpdateShowExperimental(ctrl, *) {
