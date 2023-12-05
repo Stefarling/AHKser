@@ -17,10 +17,6 @@ Description := "AHKser Script Manager"
 ;@Ahk2Exe-Let U_description = %A_PriorLine~U)^(Description \:\= \")(.+?)+(\")$~$2%
 ;@Ahk2Exe-SetDescription %U_description%
 
-FileVersion := "34"
-;@Ahk2Exe-Let U_fileVersion = %A_PriorLine~U)^(FileVersion \:\= \")(.+?)+(\")$~$2%
-;@Ahk2Exe-SetFileVersion %U_fileVersion%
-
 ProductName := "AHKser Script Manager"
 ;@Ahk2Exe-Let U_productName = %A_PriorLine~U)^(ProductName \:\= \")(.+?)+(\")$~$2%
 ;@Ahk2Exe-SetName %U_productName%
@@ -28,6 +24,10 @@ ProductName := "AHKser Script Manager"
 ProductVersion := "1.1.0"
 ;@Ahk2Exe-Let U_productVersion = %A_PriorLine~U)^(ProductVersion \:\= \")(.+?)+(\")$~$2%
 ;@Ahk2Exe-SetProductVersion %U_productVersion%
+
+FileVersion := "35"
+;@Ahk2Exe-Let U_fileVersion = %A_PriorLine~U)^(FileVersion \:\= \")(.+?)+(\")$~$2%
+;@Ahk2Exe-SetFileVersion %U_fileVersion%
 
 ;@Ahk2Exe-SetMainIcon assets\appIcon.ico
 ;@Ahk2Exe-Base ..\v2\AutoHotkey64.exe, compiled\
