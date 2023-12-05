@@ -7,6 +7,11 @@ on:
       - 'assets/**'
       - 'LICENSE.md'
       - 'CHANGELOG.md'
+      - '!AutoHotkey/**'
+      - '!bin/**'
+      - '!.github/**'
+      - '!.gitignore'
+      - '!.env'
 
 
 jobs:
