@@ -25,7 +25,7 @@ ProductVersion := "1.2.0"
 ;@Ahk2Exe-Let U_productVersion = %A_PriorLine~U)^(ProductVersion \:\= \")(.+?)+(\")$~$2%
 ;@Ahk2Exe-SetProductVersion %U_productVersion%
 
-FileVersion := "36"
+FileVersion := "37"
 ;@Ahk2Exe-Let U_fileVersion = %A_PriorLine~U)^(FileVersion \:\= \")(.+?)+(\")$~$2%
 ;@Ahk2Exe-SetFileVersion %U_fileVersion%
 
@@ -34,13 +34,37 @@ FileVersion := "36"
 ;@Ahk2Exe-ExeName %A_ScriptName%
 
 ;@Ahk2Exe-IgnoreBegin
-TraySetIcon(A_ScriptDir "\assets\appIcon.ico")
+try{
+    TraySetIcon(A_ScriptDir "\assets\appIcon.ico")
+}catch{
+    MsgBox "'assets\appIcon.ico' doesn't exist."
+}
 ;@Ahk2Exe-IgnoreEnd
 
 ; #ANCHOR Settings - Program
 Persistent
 SetWorkingDir A_ScriptDir
 OnExit SaveProgramState
+
+; #ANCHOR - Resources
+
+AppIcon := ""
+
+if(A_IsCompiled = true){
+    try{
+        DirCreate(A_ScriptDir "\Scripts\Universal")
+        DirCreate(A_ScriptDir "\docs")
+        FileInstall ".github\LICENSE.md","docs\LICENSE.md", true
+        FileInstall "assets\StopWatch.ahk","Scripts\Universal\StopWatch.ahk", true
+        AppIcon := LoadPicture("AHKser.exe")
+    }
+}else{
+    try{
+        AppIcon := LoadPicture("assets\appIcon.ico")
+    }catch{
+        MsgBox "Can't load app icon from '\assets\appIcon.ico'."
+    }
+}
 
 F11::ListVars
 
@@ -204,7 +228,7 @@ OSD.MarginX := 0
 OSD.MarginY := 0
 OSD.BackColor := "000000"
 OSD.SetFont("s36 bold")
-OSD.Add("Picture", "Section XM-0 YM-0 w64 h64 BackgroundTrans",  A_InitialWorkingDir "\assets\appIcon.ico")
+OSD.Add("Picture", "Section XM-0 YM-0 w64 h64 BackgroundTrans", "hbitmap:*" AppIcon)
 OSDtext := OSD.Add("Text","XP+22 YP+18 BackgroundTrans cff0000",ScriptsRunning)
 WinSetTransColor(OSD.BackColor " 225", OSD)
 OSD.Opt("+AlwaysOnTop -Resize +ToolWindow -Caption -SysMenu +E0x20")
@@ -226,7 +250,7 @@ LicenseLink := AboutGui.Add("Link","XS YP+15",'<a href="' CopyrightUrl '">' Copy
 AboutLink := AboutGui.Add("Link","XS YP+15",'<a href="https://github.com/Stefarling/AHKser">AHKser Source Code</a>')
 AutoHotkeyLink := AboutGui.Add("Link","XS YP+15",'<a href="https://www.autohotkey.com/">AutoHotkey</a>')
 
-AboutPicture := AboutGui.Add("Picture", "Section w64 h64 YS BackgroundTrans",  A_InitialWorkingDir "\assets\appIcon.ico")
+AboutGui.Add("Picture", "Section w64 h64 YS BackgroundTrans", "hbitmap:*" AppIcon)
 
 ; #ANCHOR Symbols - Status
 Running := "✓"
