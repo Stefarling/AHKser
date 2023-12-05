@@ -2,6 +2,9 @@ name: Build and Package Edge
 
 on:
   push:
+    branches:
+      - 'release/main'
+      - 'release/preview'      
     paths:
       - '**.ahk'
       - 'assets/**'
