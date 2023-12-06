@@ -175,7 +175,7 @@ Distributed under the GNU GPLv3 license. See [license][license-new-url] for more
 
 Stefan Darling -  [admin@stefarling.me](mailto:admin@stefarling.me)
 
-Project Link: [https://github.com/stefarling/AHKser](https://github.com/stefarling/AHKser)
+Project Link: [AHKser Development](https://github.com/users/Stefarling/projects/6)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
