@@ -105,10 +105,10 @@ First, you will need to meet these requirements.
 
 ### Installation
 
-1. Get the newest release of [AHKser.zip](https://github.com/Stefarling/AHKser/releases/latest).
-2. You might have to unblock the download if your web browser or operaing system is twitchy. [Read more about why](https://allaboutcookies.org/antivirus-false-positive).
-3. Extract the downloaded zip anywhere, and run the AHKser.exe or AHKser.ahk file within, depending on your preference of download.
-4. Updating is as simple as overwriting the downloaded files with the newer version.
+1. Get the newest release of [AHKser](https://github.com/Stefarling/AHKser/releases/latest).
+2. You might have to unblock the download if your web browser or operaing system is twitchy.  [Read more about why](https://allaboutcookies.org/antivirus-false-positive).
+3. AHKser.exe is portable and will create the needed files where it lives. You get to give it a happy home somewhere.
+4. Updating is as simple as replacing AHKser.exe with an updated version.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
