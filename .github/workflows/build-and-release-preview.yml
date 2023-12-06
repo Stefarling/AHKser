@@ -49,6 +49,6 @@ jobs:
           $combined_version = "$product_version-$file_version"
 
           # Create the GitHub release
-          gh release create "v$combined_version" .\compiled\AHKser.exe -t "v$combined_version" --generate-notes --target release/preview
+          gh release create "v$combined_version" .\compiled\AHKser.exe -t "v$combined_version" --generate-notes --prerelease --target release/preview
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
