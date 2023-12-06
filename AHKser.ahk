@@ -21,11 +21,11 @@ ProductName := "AHKser Script Manager"
 ;@Ahk2Exe-Let U_productName = %A_PriorLine~U)^(ProductName \:\= \")(.+?)+(\")$~$2%
 ;@Ahk2Exe-SetName %U_productName%
 
-ProductVersion := "1.2.0"
+ProductVersion := "1.2.1"
 ;@Ahk2Exe-Let U_productVersion = %A_PriorLine~U)^(ProductVersion \:\= \")(.+?)+(\")$~$2%
 ;@Ahk2Exe-SetProductVersion %U_productVersion%
 
-FileVersion := "40"
+FileVersion := "41"
 ;@Ahk2Exe-Let U_fileVersion = %A_PriorLine~U)^(FileVersion \:\= \")(.+?)+(\")$~$2%
 ;@Ahk2Exe-SetFileVersion %U_fileVersion%
 
