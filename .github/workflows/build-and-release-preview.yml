@@ -1,0 +1,54 @@
+name: Build and Package - preview
+
+on:
+  push:
+    branches:
+      - 'release/preview'      
+    paths:
+      - '**.ahk'
+      - 'assets/**'
+      - '!AutoHotkey/**'
+      - '!.github/**'
+      - '!.gitignore'
+
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          repository: "Stefarling/AHKser"
+
+      - name: Create Folder Tree
+        shell: pwsh
+        working-directory: ${{ github.workspace }}
+        run: |
+          if (Test-Path -Path .\compiled) {
+              Remove-Item -Path .\compiled\* -Recurse -Force
+          }
+          else {
+              New-Item -ItemType Directory -Path .\compiled -Force
+          }
+
+      - name: Compile Script
+        shell: pwsh
+        working-directory: ${{ github.workspace }}
+        run: |
+          & ".\AutoHotkey\Compiler\Ahk2Exe.exe" /in .\AHKser.ahk /out .\compiled\AHKser.exe /silent
+
+      - name: Create Release
+        shell: pwsh
+        working-directory: ${{ github.workspace }}
+        run: |        
+          $product_version = (Get-Content -Path .\AHKser.ahk | Select-String -Pattern '^ProductVersion := ' -Raw) -replace '^ProductVersion := "(.*)"', '$1'
+          $file_version = (Get-Content -Path .\AHKser.ahk | Select-String -Pattern '^FileVersion := ' -Raw) -replace '^FileVersion := "(.*)"', '$1'
+
+          # Combine ProductVersion and FileVersion into a single version string
+          $combined_version = "$product_version-$file_version"
+
+          # Create the GitHub release
+          gh release create "v$combined_version" .\compiled\AHKser.exe -t "v$combined_version" --generate-notes --target release/preview
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

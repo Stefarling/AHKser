@@ -1,6 +1,3 @@
-/AHKser
 /Scripts
-/Compiled
-*.zip
+/compiled
 AHKserSettings*
-/release
